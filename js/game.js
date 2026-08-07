@@ -9,28 +9,28 @@
     [15/16,  7/16, 13/16,  5/16]
   ];
 
-  const CYBER_ARCADE_PALETTE = [
-    [6, 4, 13],
-    [18, 14, 34],
-    [45, 20, 75],
-    [110, 25, 90],
-    [255, 0, 85],
-    [255, 60, 120],
-    [0, 160, 200],
-    [0, 240, 255],
-    [0, 255, 170],
-    [50, 220, 120],
-    [255, 150, 0],
-    [255, 183, 0],
-    [255, 235, 60],
-    [139, 92, 246],
-    [200, 200, 220],
-    [250, 250, 255]
+  const 16-Bit Console_PALETTE = [
+    [12, 10, 20],
+    [26, 20, 42],
+    [54, 40, 80],
+    [98, 30, 85],
+    [228, 16, 80],
+    [255, 90, 140],
+    [0, 168, 204],
+    [0, 230, 255],
+    [20, 220, 140],
+    [240, 170, 0],
+    [255, 220, 40],
+    [255, 110, 0],
+    [130, 80, 220],
+    [180, 185, 200],
+    [220, 225, 240],
+    [255, 255, 255]
   ];
 
   const colorCache = new Map();
 
-  function quantizeColorFast(r, g, b, x, y, ditherStrength = 0.22) {
+  function quantizeColorFast(r, g, b, x, y, ditherStrength = 0.20) {
     const ditherValue = BAYER_4X4[y & 3][x & 3] - 0.5;
     const offset = ditherValue * ditherStrength * 255;
 
@@ -46,11 +46,11 @@
     let cached = colorCache.get(key);
     if (cached) return cached;
 
-    let closest = CYBER_ARCADE_PALETTE[0];
+    let closest = 16-Bit Console_PALETTE[0];
     let minDistance = 1000000;
 
-    for (let i = 0; i < CYBER_ARCADE_PALETTE.length; i++) {
-      const c = CYBER_ARCADE_PALETTE[i];
+    for (let i = 0; i < 16-Bit Console_PALETTE.length; i++) {
+      const c = 16-Bit Console_PALETTE[i];
       const dist = 0.3 * (cr - c[0]) * (cr - c[0]) + 0.59 * (cg - c[1]) * (cg - c[1]) + 0.11 * (cb - c[2]) * (cb - c[2]);
       if (dist < minDistance) {
         minDistance = dist;
@@ -116,20 +116,20 @@
       const osc = this.ctx.createOscillator();
       const gain = this.ctx.createGain();
       osc.type = 'square';
-      osc.frequency.setValueAtTime(480 + (Math.random() - 0.5) * 40, this.ctx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(70, this.ctx.currentTime + 0.08);
+      osc.frequency.setValueAtTime(440 + (Math.random() - 0.5) * 30, this.ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(80, this.ctx.currentTime + 0.07);
       gain.gain.setValueAtTime(0.4, this.ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.08);
+      gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.07);
       osc.connect(gain);
       gain.connect(this.sfxGain);
       osc.start();
-      osc.stop(this.ctx.currentTime + 0.08);
+      osc.stop(this.ctx.currentTime + 0.07);
     }
 
     playShotgun() {
       if (!this.initialized) return;
       this.resume();
-      const bufferSize = (this.ctx.sampleRate * 0.18) | 0;
+      const bufferSize = (this.ctx.sampleRate * 0.16) | 0;
       const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
       const data = buffer.getChannelData(0);
       for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
@@ -139,12 +139,12 @@
 
       const filter = this.ctx.createBiquadFilter();
       filter.type = 'lowpass';
-      filter.frequency.setValueAtTime(1400, this.ctx.currentTime);
-      filter.frequency.exponentialRampToValueAtTime(80, this.ctx.currentTime + 0.18);
+      filter.frequency.setValueAtTime(1200, this.ctx.currentTime);
+      filter.frequency.exponentialRampToValueAtTime(90, this.ctx.currentTime + 0.16);
 
       const gain = this.ctx.createGain();
-      gain.gain.setValueAtTime(0.8, this.ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.18);
+      gain.gain.setValueAtTime(0.75, this.ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.16);
 
       noise.connect(filter);
       filter.connect(gain);
@@ -158,14 +158,14 @@
       const osc = this.ctx.createOscillator();
       const gain = this.ctx.createGain();
       osc.type = 'sawtooth';
-      osc.frequency.setValueAtTime(950, this.ctx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(120, this.ctx.currentTime + 0.12);
+      osc.frequency.setValueAtTime(880, this.ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(140, this.ctx.currentTime + 0.10);
       gain.gain.setValueAtTime(0.35, this.ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.12);
+      gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.10);
       osc.connect(gain);
       gain.connect(this.sfxGain);
       osc.start();
-      osc.stop(this.ctx.currentTime + 0.12);
+      osc.stop(this.ctx.currentTime + 0.10);
     }
 
     playCratePickup() {
@@ -191,7 +191,7 @@
     playExplosion(pitchMultiplier = 1.0) {
       if (!this.initialized) return;
       this.resume();
-      const bufferSize = (this.ctx.sampleRate * 0.3) | 0;
+      const bufferSize = (this.ctx.sampleRate * 0.28) | 0;
       const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
       const data = buffer.getChannelData(0);
       for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
@@ -201,12 +201,12 @@
 
       const filter = this.ctx.createBiquadFilter();
       filter.type = 'lowpass';
-      filter.frequency.setValueAtTime(800 * pitchMultiplier, this.ctx.currentTime);
-      filter.frequency.exponentialRampToValueAtTime(30, this.ctx.currentTime + 0.3);
+      filter.frequency.setValueAtTime(750 * pitchMultiplier, this.ctx.currentTime);
+      filter.frequency.exponentialRampToValueAtTime(40, this.ctx.currentTime + 0.28);
 
       const gain = this.ctx.createGain();
-      gain.gain.setValueAtTime(0.85, this.ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.3);
+      gain.gain.setValueAtTime(0.8, this.ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.28);
 
       noise.connect(filter);
       filter.connect(gain);
@@ -217,7 +217,7 @@
     playCrowdRoar() {
       if (!this.initialized) return;
       this.resume();
-      const bufferSize = (this.ctx.sampleRate * 0.5) | 0;
+      const bufferSize = (this.ctx.sampleRate * 0.45) | 0;
       const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
       const data = buffer.getChannelData(0);
       for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
@@ -227,13 +227,13 @@
 
       const filter = this.ctx.createBiquadFilter();
       filter.type = 'bandpass';
-      filter.frequency.setValueAtTime(450, this.ctx.currentTime);
+      filter.frequency.setValueAtTime(400, this.ctx.currentTime);
       filter.Q.value = 1.2;
 
       const gain = this.ctx.createGain();
       gain.gain.setValueAtTime(0.01, this.ctx.currentTime);
-      gain.gain.linearRampToValueAtTime(0.35, this.ctx.currentTime + 0.12);
-      gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.5);
+      gain.gain.linearRampToValueAtTime(0.35, this.ctx.currentTime + 0.10);
+      gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.45);
 
       noise.connect(filter);
       filter.connect(gain);
@@ -275,7 +275,7 @@
 
         const filter = this.ctx.createBiquadFilter();
         filter.type = 'lowpass';
-        filter.frequency.setValueAtTime(450, now);
+        filter.frequency.setValueAtTime(400, now);
 
         gain.gain.setValueAtTime(0.15, now);
         gain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
@@ -296,43 +296,43 @@
   const WEAPONS = {
     PISTOL: {
       id: 'PISTOL', name: 'DUAL PISTOLS', color: '#00f0ff',
-      fireRate: 110, spread: 0.08, speed: 10, damage: 15,
+      fireRate: 110, spread: 0.08, speed: 9.0, damage: 15,
       bulletsPerShot: 1, size: 3, recoil: 1.5,
       sound: () => soundEngine.playPistol()
     },
     SHOTGUN: {
-      id: 'SHOTGUN', name: 'HEAVY SHOTGUN', color: '#ffb700',
-      fireRate: 320, spread: 0.42, speed: 8.5, damage: 16,
+      id: 'SHOTGUN', name: 'HEAVY SHOTGUN', color: '#f0a000',
+      fireRate: 320, spread: 0.42, speed: 7.5, damage: 16,
       bulletsPerShot: 10, size: 2.5, recoil: 7, knockback: 4.5,
       sound: () => soundEngine.playShotgun()
     },
     PLASMA: {
-      id: 'PLASMA', name: 'PLASMA RIFLE', color: '#ff0055',
-      fireRate: 65, spread: 0.12, speed: 12, damage: 14,
+      id: 'PLASMA', name: 'PLASMA RIFLE', color: '#e41050',
+      fireRate: 65, spread: 0.12, speed: 11.0, damage: 14,
       bulletsPerShot: 1, size: 4, recoil: 1, piercing: true,
       sound: () => soundEngine.playLaser()
     },
     RAILGUN: {
-      id: 'RAILGUN', name: 'HYPER RAILGUN', color: '#00ffaa',
-      fireRate: 400, spread: 0.01, speed: 22, damage: 100,
+      id: 'RAILGUN', name: 'HYPER RAILGUN', color: '#14dc8c',
+      fireRate: 400, spread: 0.01, speed: 20.0, damage: 100,
       bulletsPerShot: 1, size: 4, recoil: 9, piercing: true, knockback: 6,
       sound: () => soundEngine.playLaser()
     },
     SAWBLADE: {
-      id: 'SAWBLADE', name: 'BOUNCING SAW', color: '#8b5cf6',
-      fireRate: 250, spread: 0.1, speed: 7.5, damage: 30,
+      id: 'SAWBLADE', name: 'BOUNCING SAW', color: '#8250dc',
+      fireRate: 250, spread: 0.1, speed: 7.0, damage: 30,
       bulletsPerShot: 2, size: 6, bouncing: true, bouncesLeft: 6, recoil: 3, piercing: true,
       sound: () => soundEngine.playShotgun()
     },
     MISSILE: {
-      id: 'MISSILE', name: 'MICRO MISSILE', color: '#ff9900',
-      fireRate: 220, spread: 0.25, speed: 7.0, damage: 50,
+      id: 'MISSILE', name: 'MICRO MISSILE', color: '#ff6e00',
+      fireRate: 220, spread: 0.25, speed: 6.5, damage: 50,
       bulletsPerShot: 3, size: 5, explosive: true, recoil: 4, homing: true,
       sound: () => soundEngine.playPistol()
     },
     FLAMETHROWER: {
       id: 'FLAMETHROWER', name: 'FLAMETHROWER', color: '#ff3300',
-      fireRate: 40, spread: 0.45, speed: 6.0, damage: 10,
+      fireRate: 40, spread: 0.45, speed: 5.5, damage: 10,
       bulletsPerShot: 3, size: 5, recoil: 0.3, flame: true, piercing: true,
       sound: () => soundEngine.playLaser()
     }
@@ -340,62 +340,62 @@
 
   class Bullet {
     constructor(x, y, vx, vy, weapon, isEnemy = false) {
-      this.init(x, y, vx, vy, weapon, isEnemy);
-    }
-
-    init(x, y, vx, vy, weapon, isEnemy = false) {
-      this.x = x; this.y = y; this.vx = vx; this.vy = vy;
+      this.x = x; this.y = y;
+      this.vx = vx; this.vy = vy;
       this.weapon = weapon;
-      this.color = isEnemy ? '#ff0055' : weapon.color;
+      this.color = isEnemy ? '#e41050' : weapon.color;
       this.size = weapon.size || 3;
       this.damage = weapon.damage || 10;
       this.piercing = weapon.piercing || false;
       this.bouncing = weapon.bouncing || false;
       this.bouncesLeft = weapon.bouncesLeft || 0;
       this.isEnemy = isEnemy;
-      this.life = 0; this.maxLife = 120;
+      this.lifeFrames = 0; this.maxLifeFrames = 120;
       this.dead = false;
     }
 
-    update(arenaBounds, particles, dt, enemies) {
+    update(arenaBounds, particles, enemies) {
       if (this.weapon.homing && enemies && enemies.length > 0 && !this.isEnemy) {
         let closest = null;
-        let minDist = 160;
+        let minDistSq = 140 * 140;
         for (let i = 0; i < enemies.length; i++) {
           const e = enemies[i];
-          const d = Math.hypot(e.x - this.x, e.y - this.y);
-          if (d < minDist) { minDist = d; closest = e; }
+          const dSq = (e.x - this.x) * (e.x - this.x) + (e.y - this.y) * (e.y - this.y);
+          if (dSq < minDistSq) { minDistSq = dSq; closest = e; }
         }
         if (closest) {
           const targetAngle = Math.atan2(closest.y - this.y, closest.x - this.x);
           const currentAngle = Math.atan2(this.vy, this.vx);
-          const newAngle = currentAngle + (targetAngle - currentAngle) * 0.14 * dt;
+          const newAngle = currentAngle + (targetAngle - currentAngle) * 0.14;
           const spd = Math.hypot(this.vx, this.vy);
           this.vx = Math.cos(newAngle) * spd;
           this.vy = Math.sin(newAngle) * spd;
         }
       }
 
-      this.x += this.vx * dt;
-      this.y += this.vy * dt;
-      this.life += dt;
+      this.x += this.vx;
+      this.y += this.vy;
+      this.lifeFrames++;
 
-      if (this.life >= this.maxLife) this.dead = true;
+      if (this.lifeFrames >= this.maxLifeFrames) this.dead = true;
 
-      if (this.x <= arenaBounds.x || this.x >= arenaBounds.x + arenaBounds.w) {
+      const px = Math.floor(this.x);
+      const py = Math.floor(this.y);
+
+      if (px <= arenaBounds.x || px >= arenaBounds.x + arenaBounds.w) {
         if (this.bouncing && this.bouncesLeft > 0) {
           this.vx *= -1; this.bouncesLeft--;
         } else this.dead = true;
       }
 
-      if (this.y <= arenaBounds.y || this.y >= arenaBounds.y + arenaBounds.h) {
+      if (py <= arenaBounds.y || py >= arenaBounds.y + arenaBounds.h) {
         if (this.bouncing && this.bouncesLeft > 0) {
           this.vy *= -1; this.bouncesLeft--;
         } else this.dead = true;
       }
 
       if (Math.random() < 0.35 && particles) {
-        particles.addParticle(this.x, this.y, (Math.random() - 0.5) * 0.5, (Math.random() - 0.5) * 0.5, this.color, 2, 10);
+        particles.addParticle(px, py, (Math.random() - 0.5) * 0.5, (Math.random() - 0.5) * 0.5, this.color, 2, 10);
       }
     }
 
@@ -416,29 +416,29 @@
     }
 
     spawnCrate() {
-      const padding = 24;
+      const padding = 20;
       const x = Math.floor(this.arenaBounds.x + padding + Math.random() * (this.arenaBounds.w - padding * 2));
       const y = Math.floor(this.arenaBounds.y + padding + Math.random() * (this.arenaBounds.h - padding * 2));
       const isGolden = Math.random() < 0.2;
 
       this.activeCrate = {
         x, y,
-        size: 14,
-        bounceTimer: 0,
-        pulse: 0,
-        timerRing: 480,
-        maxTimerRing: 480,
+        size: 12,
+        frameTimer: 0,
+        pulseY: 0,
+        timerRingFrames: 480,
+        maxTimerRingFrames: 480,
         isGolden
       };
     }
 
-    update(player, particles, uiManager, dt, popups, triggerSlowMo) {
+    update(player, particles, uiManager, popups, triggerSlowMo) {
       if (!this.activeCrate) { this.spawnCrate(); return; }
 
       const crate = this.activeCrate;
-      crate.bounceTimer += 0.08 * dt;
-      crate.pulse = Math.floor(Math.sin(crate.bounceTimer) * 2.5);
-      crate.timerRing -= dt;
+      crate.frameTimer++;
+      crate.pulseY = Math.floor(Math.sin(crate.frameTimer * 0.08) * 2.0);
+      crate.timerRingFrames--;
 
       const dx = player.x - crate.x;
       const dy = player.y - crate.y;
@@ -461,7 +461,7 @@
         player.equipWeapon(newWeapon);
 
         let scoreGain = 100 * player.comboMultiplier;
-        if (crate.timerRing > 240) scoreGain += 50;
+        if (crate.timerRingFrames > 240) scoreGain += 50;
 
         if (uiManager) {
           uiManager.showBanner(`CRATE #${this.cratesCollected}: ${newWeapon.name}!`, 1200);
@@ -469,22 +469,22 @@
         }
 
         if (popups) {
-          popups.addPopup(crate.x, crate.y - 10, `+${scoreGain}`, crate.isGolden ? '#ffe600' : '#00f0ff');
+          popups.addPopup(crate.x, crate.y - 10, `+${scoreGain}`, crate.isGolden ? '#ffdc28' : '#00e6ff');
         }
 
         if (particles) {
-          const pColor = crate.isGolden ? '#ffb700' : '#00f0ff';
-          for (let i = 0; i < 30; i++) {
-            const angle = (Math.PI * 2 * i) / 30;
-            const spd = 2 + Math.random() * 4.0;
-            particles.addParticle(crate.x, crate.y, Math.cos(angle) * spd, Math.sin(angle) * spd, pColor, 3, 25);
+          const pColor = crate.isGolden ? '#f0a000' : '#00e6ff';
+          for (let i = 0; i < 28; i++) {
+            const angle = (Math.PI * 2 * i) / 28;
+            const spd = 2 + Math.random() * 3.5;
+            particles.addParticle(crate.x, crate.y, Math.cos(angle) * spd, Math.sin(angle) * spd, pColor, 2, 22);
           }
         }
 
         this.spawnCrate();
       }
 
-      if (crate.timerRing <= 0) {
+      if (crate.timerRingFrames <= 0) {
         this.spawnCrate();
       }
     }
@@ -494,18 +494,24 @@
       const c = this.activeCrate;
       const cx = Math.floor(c.x);
       const cy = Math.floor(c.y);
-      const drawY = Math.floor(c.y + c.pulse);
+      const drawY = Math.floor(c.y + c.pulseY);
       const half = c.size >> 1;
 
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
-      ctx.fillRect(cx - half, cy + half - 2, c.size, 4);
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+      ctx.fillRect(cx - half, cy + half - 1, c.size, 3);
 
-      ctx.fillStyle = c.isGolden ? '#ffb700' : '#ff9900';
+      ctx.fillStyle = c.isGolden ? '#f0a000' : '#9c5020';
       ctx.fillRect(cx - half, drawY - half, c.size, c.size);
 
-      ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth = 1;
-      ctx.strokeRect(cx - half + 0.5, drawY - half + 0.5, c.size - 1, c.size - 1);
+      ctx.fillStyle = c.isGolden ? '#ffdc28' : '#e08030';
+      ctx.fillRect(cx - half + 1, drawY - half + 1, c.size - 2, 1);
+      ctx.fillRect(cx - half + 1, drawY - half + 1, 1, c.size - 2);
+
+      ctx.fillStyle = '#000000';
+      ctx.fillRect(cx - half + 2, drawY - half + 2, 2, 2);
+      ctx.fillRect(cx + half - 4, drawY - half + 2, 2, 2);
+      ctx.fillRect(cx - half + 2, drawY + half - 4, 2, 2);
+      ctx.fillRect(cx + half - 4, drawY + half - 4, 2, 2);
 
       ctx.fillStyle = '#ffffff';
       ctx.font = '8px "Press Start 2P"';
@@ -513,11 +519,11 @@
       ctx.textBaseline = 'middle';
       ctx.fillText(c.isGolden ? '★' : '?', cx, drawY + 1);
 
-      const ringPct = Math.max(0, c.timerRing / c.maxTimerRing);
-      ctx.strokeStyle = c.isGolden ? '#ffb700' : '#00f0ff';
+      const ringPct = Math.max(0, c.timerRingFrames / c.maxTimerRingFrames);
+      ctx.strokeStyle = c.isGolden ? '#ffdc28' : '#00e6ff';
       ctx.lineWidth = 1;
       ctx.beginPath();
-      ctx.arc(cx, drawY, 12, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * ringPct);
+      ctx.arc(cx, drawY, 10, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * ringPct);
       ctx.stroke();
     }
   }
@@ -536,8 +542,8 @@
         y: Math.floor(y),
         vx: Math.cos(ejectAngle) * spd,
         vy: Math.sin(ejectAngle) * spd,
-        life: 240,
-        color: '#c0c0d0'
+        lifeFrames: 240,
+        color: '#b4b9c8'
       });
       if (this.casings.length > 150) this.casings.shift();
     }
@@ -548,44 +554,42 @@
         y: Math.floor(y),
         size: size || 8,
         color,
-        life: 360
+        lifeFrames: 360
       });
       if (this.corpses.length > 300) this.corpses.shift();
     }
 
-    update(dt) {
+    update() {
       for (let i = this.casings.length - 1; i >= 0; i--) {
         const c = this.casings[i];
-        c.x += c.vx * dt;
-        c.y += c.vy * dt;
-        c.vx *= Math.pow(0.85, dt);
-        c.vy *= Math.pow(0.85, dt);
-        c.life -= dt;
-        if (c.life <= 0) fastRemove(this.casings, i);
+        c.x += c.vx;
+        c.y += c.vy;
+        c.vx *= 0.85;
+        c.vy *= 0.85;
+        c.lifeFrames--;
+        if (c.lifeFrames <= 0) fastRemove(this.casings, i);
       }
       for (let i = 0; i < this.corpses.length; i++) {
         const corpse = this.corpses[i];
-        corpse.life -= dt;
-        if (corpse.life <= 0) fastRemove(this.corpses, i);
+        corpse.lifeFrames--;
+        if (corpse.lifeFrames <= 0) fastRemove(this.corpses, i);
       }
     }
 
     draw(ctx) {
       for (let i = 0; i < this.corpses.length; i++) {
         const corpse = this.corpses[i];
-        const cx = Math.floor(corpse.x);
-        const cy = Math.floor(corpse.y);
-        const cz = Math.floor(corpse.size);
+        const cz = corpse.size;
         ctx.fillStyle = corpse.color;
-        ctx.globalAlpha = Math.max(0, corpse.life / 360) * 0.75;
-        ctx.fillRect(cx - (cz >> 1), cy - (cz >> 1), cz, cz - 2);
+        ctx.globalAlpha = Math.max(0, corpse.lifeFrames / 360) * 0.75;
+        ctx.fillRect(corpse.x - (cz >> 1), corpse.y - (cz >> 1), cz, cz - 2);
       }
       ctx.globalAlpha = 1.0;
 
       for (let i = 0; i < this.casings.length; i++) {
         const c = this.casings[i];
         ctx.fillStyle = c.color;
-        ctx.globalAlpha = Math.max(0, c.life / 240);
+        ctx.globalAlpha = Math.max(0, c.lifeFrames / 240);
         ctx.fillRect(Math.floor(c.x), Math.floor(c.y), 2, 1);
       }
       ctx.globalAlpha = 1.0;
@@ -599,26 +603,24 @@
       this.popups.push({
         x: Math.floor(x),
         y: Math.floor(y),
-        stepAccumulator: 0,
+        frameTickCounter: 0,
         text,
         color,
-        life: 45
+        lifeFrames: 45
       });
     }
 
-    update(dt) {
+    update() {
       for (let i = this.popups.length - 1; i >= 0; i--) {
         const p = this.popups[i];
-        p.stepAccumulator += 0.6 * dt;
+        p.frameTickCounter++;
 
-        if (p.stepAccumulator >= 1.0) {
-          const pixelsToMove = Math.floor(p.stepAccumulator);
-          p.y -= pixelsToMove;
-          p.stepAccumulator -= pixelsToMove;
+        if ((p.frameTickCounter % 3) === 0) {
+          p.y -= 1;
         }
 
-        p.life -= dt;
-        if (p.life <= 0) fastRemove(this.popups, i);
+        p.lifeFrames--;
+        if (p.lifeFrames <= 0) fastRemove(this.popups, i);
       }
     }
 
@@ -642,55 +644,55 @@
     constructor(x, y) {
       this.x = x; this.y = y;
       this.size = 10;
-      this.speed = 2.4;
+      this.speed = 2.2;
       this.currentWeapon = WEAPONS.PISTOL;
       this.aimAngle = 0;
       this.lastShotTime = 0;
       this.hp = 100;
       this.maxHp = 100;
-      this.invulnerableTimer = 0;
+      this.invulnerableFrames = 0;
       this.comboMultiplier = 1;
-      this.comboTimer = 0;
+      this.comboFrames = 0;
       this.killStreak = 0;
 
       this.isDashing = false;
-      this.dashTimer = 0;
-      this.dashCooldown = 0;
+      this.dashFrames = 0;
+      this.dashCooldownFrames = 0;
       this.dashVx = 0; this.dashVy = 0;
     }
 
     equipWeapon(w) { this.currentWeapon = w; }
 
     takeDamage(amount, particles) {
-      if (this.invulnerableTimer > 0 || this.isDashing) return false;
+      if (this.invulnerableFrames > 0 || this.isDashing) return false;
       this.hp -= amount;
-      this.invulnerableTimer = 35;
+      this.invulnerableFrames = 35;
       this.comboMultiplier = 1;
-      this.comboTimer = 0;
+      this.comboFrames = 0;
 
       if (particles) {
         for (let i = 0; i < 16; i++) {
           const ang = Math.random() * Math.PI * 2;
-          particles.addParticle(this.x, this.y, Math.cos(ang) * 2.5, Math.sin(ang) * 2.5, '#ff0055', 2.5, 20);
+          particles.addParticle(this.x, this.y, Math.cos(ang) * 2.5, Math.sin(ang) * 2.5, '#e41050', 2.5, 20);
         }
       }
       return true;
     }
 
-    update(keys, mousePos, arenaBounds, bullets, particles, screenShake, dt, debris) {
-      if (this.invulnerableTimer > 0) this.invulnerableTimer -= dt;
-      if (this.dashCooldown > 0) this.dashCooldown -= dt;
+    update(keys, mousePos, arenaBounds, bullets, particles, screenShake, debris) {
+      if (this.invulnerableFrames > 0) this.invulnerableFrames--;
+      if (this.dashCooldownFrames > 0) this.dashCooldownFrames--;
 
-      if (this.comboTimer > 0) {
-        this.comboTimer -= dt;
-        if (this.comboTimer <= 0) {
+      if (this.comboFrames > 0) {
+        this.comboFrames--;
+        if (this.comboFrames <= 0) {
           this.comboMultiplier = 1;
           this.killStreak = 0;
         }
       }
 
       if (keys['Space'] || keys['ShiftLeft'] || keys['ShiftRight']) {
-        if (!this.isDashing && this.dashCooldown <= 0) {
+        if (!this.isDashing && this.dashCooldownFrames <= 0) {
           let dx = 0, dy = 0;
           if (keys['KeyW'] || keys['ArrowUp']) dy -= 1;
           if (keys['KeyS'] || keys['ArrowDown']) dy += 1;
@@ -699,21 +701,21 @@
 
           if (dx !== 0 || dy !== 0) {
             const mag = Math.hypot(dx, dy);
-            this.dashVx = (dx / mag) * 5.8;
-            this.dashVy = (dy / mag) * 5.8;
+            this.dashVx = (dx / mag) * 5.4;
+            this.dashVy = (dy / mag) * 5.4;
             this.isDashing = true;
-            this.dashTimer = 10;
-            this.dashCooldown = 35;
+            this.dashFrames = 10;
+            this.dashCooldownFrames = 35;
           }
         }
       }
 
       if (this.isDashing) {
-        this.x += this.dashVx * dt; this.y += this.dashVy * dt;
-        this.dashTimer -= dt;
-        if (this.dashTimer <= 0) this.isDashing = false;
+        this.x += this.dashVx; this.y += this.dashVy;
+        this.dashFrames--;
+        if (this.dashFrames <= 0) this.isDashing = false;
         if (particles && Math.random() < 0.6) {
-          particles.addParticle(this.x, this.y, 0, 0, '#00f0ff', 3, 12);
+          particles.addParticle(this.x, this.y, 0, 0, '#00e6ff', 3, 12);
         }
       } else {
         let moveX = 0, moveY = 0;
@@ -723,8 +725,9 @@
         if (keys['KeyD'] || keys['ArrowRight']) moveX += 1;
 
         if (moveX !== 0 && moveY !== 0) { moveX *= 0.7071; moveY *= 0.7071; }
-        this.x += moveX * this.speed * dt;
-        this.y += moveY * this.speed * dt;
+
+        this.x += moveX * this.speed;
+        this.y += moveY * this.speed;
       }
 
       const pad = this.size / 2;
@@ -732,7 +735,9 @@
       this.y = Math.max(arenaBounds.y + pad, Math.min(arenaBounds.y + arenaBounds.h - pad, this.y));
 
       if (mousePos) {
-        this.aimAngle = Math.atan2(mousePos.y - this.y, mousePos.x - this.x);
+        const dx = mousePos.x - this.x;
+        const dy = mousePos.y - this.y;
+        this.aimAngle = Math.atan2(dy, dx);
       }
 
       const now = performance.now();
@@ -773,47 +778,45 @@
           particles.addParticle(
             this.x + Math.cos(this.aimAngle) * 8,
             this.y + Math.sin(this.aimAngle) * 8,
-            vx * 0.2 + (Math.random() - 0.5),
-            vy * 0.2 + (Math.random() - 0.5),
-            w.color, 2.5, 10
+            vx * 0.2, vy * 0.2,
+            w.color, 2, 10
           );
         }
       }
     }
 
     draw(ctx) {
-      if (this.invulnerableTimer > 0 && (((this.invulnerableTimer / 3) | 0) % 2 === 0)) return;
+      if (this.invulnerableFrames > 0 && (((this.invulnerableFrames / 3) | 0) % 2 === 0)) return;
 
       const px = Math.floor(this.x);
       const py = Math.floor(this.y);
-      const half = this.size >> 1;
 
-      ctx.fillStyle = this.isDashing ? '#00f0ff' : '#ffb700';
-      ctx.fillRect(px - half, py - half, this.size, this.size);
+      ctx.fillStyle = this.isDashing ? '#00e6ff' : '#dc9600';
+      ctx.fillRect(px - 4, py - 4, 8, 8);
 
-      ctx.fillStyle = '#06040d';
+      ctx.fillStyle = '#ffdc28';
+      ctx.fillRect(px - 2, py - 2, 4, 4);
+
+      ctx.fillStyle = '#00e6ff';
       const eyeX = Math.floor(this.x + Math.cos(this.aimAngle) * 3);
       const eyeY = Math.floor(this.y + Math.sin(this.aimAngle) * 3);
-      ctx.fillRect(eyeX - 1, eyeY - 1, 3, 3);
+      ctx.fillRect(eyeX - 1, eyeY - 1, 3, 2);
 
-      ctx.strokeStyle = this.currentWeapon.color;
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(px, py);
-      ctx.lineTo(
-        Math.floor(this.x + Math.cos(this.aimAngle) * 10),
-        Math.floor(this.y + Math.sin(this.aimAngle) * 10)
+      ctx.fillStyle = this.currentWeapon.color;
+      ctx.fillRect(
+        Math.floor(this.x + Math.cos(this.aimAngle) * 4) - 1,
+        Math.floor(this.y + Math.sin(this.aimAngle) * 4) - 1,
+        3, 3
       );
-      ctx.stroke();
     }
   }
 
   const ENEMY_TYPES = {
-    SWARMER: { name: 'SWARMER BUG', hp: 14, speed: 1.9, size: 7, color: '#ff0055', scoreValue: 40, behavior: 'chase' },
-    CHARGER: { name: 'CYBORG BULL', hp: 50, speed: 1.3, chargeSpeed: 4.5, size: 11, color: '#ff9900', scoreValue: 120, behavior: 'charge' },
-    TURRET: { name: 'ARENA TURRET', hp: 35, speed: 0.5, size: 10, color: '#8b5cf6', scoreValue: 160, behavior: 'shoot' },
-    TITAN: { name: 'MECHA TITAN', hp: 140, speed: 0.7, size: 15, color: '#00ffaa', scoreValue: 350, behavior: 'heavy' },
-    BOSS: { name: 'BROADCAST MEGABRAIN', hp: 700, speed: 0.6, size: 26, color: '#ffb700', scoreValue: 2000, behavior: 'boss' }
+    SWARMER: { name: 'SWARMER BUG', hp: 14, speed: 1.9, size: 7, color: '#e41050', scoreValue: 40, behavior: 'chase' },
+    CHARGER: { name: 'CYBORG BULL', hp: 50, speed: 1.3, chargeSpeed: 4.5, size: 11, color: '#ff6e00', scoreValue: 120, behavior: 'charge' },
+    TURRET: { name: 'ARENA TURRET', hp: 35, speed: 0.5, size: 10, color: '#8250dc', scoreValue: 160, behavior: 'shoot' },
+    TITAN: { name: 'MECHA TITAN', hp: 140, speed: 0.7, size: 15, color: '#14dc8c', scoreValue: 350, behavior: 'heavy' },
+    BOSS: { name: 'BROADCAST MEGABRAIN', hp: 700, speed: 0.6, size: 26, color: '#ffdc28', scoreValue: 2000, behavior: 'boss' }
   };
 
   class Enemy {
@@ -826,18 +829,16 @@
       this.vx = 0;
       this.vy = 0;
 
-      this.chargeTimer = 0; this.isCharging = false;
+      this.chargeFrames = 0; this.isCharging = false;
       this.chargeDirX = 0; this.chargeDirY = 0;
-      this.shootTimer = 0; this.flashTimer = 0;
-      this.squishX = 1; this.squishY = 1;
-      this.age = 0;
+      this.shootFrames = 0; this.flashFrames = 0;
+      this.ageFrames = 0;
       this.isEnraged = false;
     }
 
     takeDamage(amount, particles, screenShake, debris, popups, knockbackDirX = 0, knockbackDirY = 0, knockbackMag = 0) {
       this.hp -= amount;
-      this.flashTimer = 5;
-      this.squishX = 1.4; this.squishY = 0.6;
+      this.flashFrames = 5;
 
       if (knockbackMag > 0) {
         this.vx += knockbackDirX * knockbackMag;
@@ -845,7 +846,7 @@
       }
 
       if (popups) {
-        popups.addPopup(this.x, this.y - 6, `-${amount}`, '#ff0055');
+        popups.addPopup(this.x, this.y - 6, `-${amount}`, '#e41050');
       }
 
       if (particles) {
@@ -868,29 +869,27 @@
           for (let i = 0; i < 20; i++) {
             const ang = Math.random() * Math.PI * 2;
             const spd = 1 + Math.random() * 4.0;
-            particles.addParticle(this.x, this.y, Math.cos(ang) * spd, Math.sin(ang) * spd, this.color, 3, 28);
+            particles.addParticle(this.x, this.y, Math.cos(ang) * spd, Math.sin(ang) * spd, this.color, 2, 24);
           }
         }
       }
     }
 
-    update(player, arenaBounds, enemyBullets, particles, dt, slowMoFactor = 1.0) {
-      if (this.flashTimer > 0) this.flashTimer -= dt;
-      this.squishX += (1 - this.squishX) * 0.2;
-      this.squishY += (1 - this.squishY) * 0.2;
+    update(player, arenaBounds, enemyBullets, particles, slowMoFactor = 1.0) {
+      if (this.flashFrames > 0) this.flashFrames--;
 
-      const effectiveDt = dt * slowMoFactor;
+      const effectiveSpeed = this.speed * slowMoFactor;
 
-      this.x += this.vx * effectiveDt;
-      this.y += this.vy * effectiveDt;
-      this.vx *= Math.pow(0.82, effectiveDt);
-      this.vy *= Math.pow(0.82, effectiveDt);
+      this.x += this.vx * slowMoFactor;
+      this.y += this.vy * slowMoFactor;
+      this.vx *= 0.82;
+      this.vy *= 0.82;
 
-      this.age += effectiveDt;
-      if (!this.isEnraged && this.age > 450) {
+      this.ageFrames++;
+      if (!this.isEnraged && this.ageFrames > 450) {
         this.isEnraged = true;
         this.speed *= 2.2;
-        this.color = '#ff0033';
+        this.color = '#e41050';
       }
 
       const dx = player.x - this.x;
@@ -899,52 +898,52 @@
 
       switch (this.type.behavior) {
         case 'chase':
-          this.x += (dx / dist) * this.speed * effectiveDt;
-          this.y += (dy / dist) * this.speed * effectiveDt;
+          this.x += (dx / dist) * effectiveSpeed;
+          this.y += (dy / dist) * effectiveSpeed;
           break;
 
         case 'charge':
           if (!this.isCharging) {
-            this.chargeTimer += effectiveDt;
-            this.x += (dx / dist) * this.speed * effectiveDt;
-            this.y += (dy / dist) * this.speed * effectiveDt;
-            if (this.chargeTimer > 90 && dist < 140) {
+            this.chargeFrames++;
+            this.x += (dx / dist) * effectiveSpeed;
+            this.y += (dy / dist) * effectiveSpeed;
+            if (this.chargeFrames > 90 && dist < 140) {
               this.isCharging = true;
               this.chargeDirX = dx / dist; this.chargeDirY = dy / dist;
-              this.chargeTimer = 0;
+              this.chargeFrames = 0;
             }
           } else {
-            this.x += this.chargeDirX * this.type.chargeSpeed * effectiveDt;
-            this.y += this.chargeDirY * this.type.chargeSpeed * effectiveDt;
-            this.chargeTimer += effectiveDt;
-            if (this.chargeTimer > 35) { this.isCharging = false; this.chargeTimer = 0; }
+            this.x += this.chargeDirX * (this.type.chargeSpeed * slowMoFactor);
+            this.y += this.chargeDirY * (this.type.chargeSpeed * slowMoFactor);
+            this.chargeFrames++;
+            if (this.chargeFrames > 35) { this.isCharging = false; this.chargeFrames = 0; }
           }
           break;
 
         case 'shoot':
-          this.x += (dx / dist) * this.speed * effectiveDt;
-          this.y += (dy / dist) * this.speed * effectiveDt;
-          this.shootTimer += effectiveDt;
-          if (this.shootTimer > 90) {
-            this.shootTimer = 0;
+          this.x += (dx / dist) * effectiveSpeed;
+          this.y += (dy / dist) * effectiveSpeed;
+          this.shootFrames++;
+          if (this.shootFrames > 90) {
+            this.shootFrames = 0;
             if (enemyBullets) {
-              enemyBullets.push(new Bullet(this.x, this.y, (dx / dist) * 3, (dy / dist) * 3, { size: 4, damage: 15, color: '#ff0055' }, true));
+              enemyBullets.push(new Bullet(this.x, this.y, (dx / dist) * 3.0, (dy / dist) * 3.0, { size: 4, damage: 15, color: '#e41050' }, true));
             }
           }
           break;
 
         case 'heavy':
         case 'boss':
-          this.x += (dx / dist) * this.speed * effectiveDt;
-          this.y += (dy / dist) * this.speed * effectiveDt;
-          this.shootTimer += effectiveDt;
-          if (this.shootTimer > (this.type.behavior === 'boss' ? 45 : 120)) {
-            this.shootTimer = 0;
+          this.x += (dx / dist) * effectiveSpeed;
+          this.y += (dy / dist) * effectiveSpeed;
+          this.shootFrames++;
+          if (this.shootFrames > (this.type.behavior === 'boss' ? 45 : 120)) {
+            this.shootFrames = 0;
             if (enemyBullets) {
               const shots = this.type.behavior === 'boss' ? 8 : 4;
               for (let i = 0; i < shots; i++) {
                 const ang = (Math.PI * 2 * i) / shots + Math.atan2(dy, dx);
-                enemyBullets.push(new Bullet(this.x, this.y, Math.cos(ang) * 2.5, Math.sin(ang) * 2.5, { size: 4, damage: 12, color: '#ff0055' }, true));
+                enemyBullets.push(new Bullet(this.x, this.y, Math.cos(ang) * 2.5, Math.sin(ang) * 2.5, { size: 4, damage: 12, color: '#e41050' }, true));
               }
             }
           }
@@ -959,14 +958,19 @@
     draw(ctx) {
       const ex = Math.floor(this.x);
       const ey = Math.floor(this.y);
-      const w = Math.floor(this.size * this.squishX);
-      const h = Math.floor(this.size * this.squishY);
+      const w = Math.floor(this.size);
+      const h = Math.floor(this.size);
+      const halfW = w >> 1;
+      const halfH = h >> 1;
 
-      ctx.fillStyle = this.flashTimer > 0 ? '#ffffff' : (this.isEnraged ? '#ff0033' : this.color);
-      ctx.fillRect(ex - (w >> 1), ey - (h >> 1), w, h);
-      ctx.strokeStyle = '#000000';
-      ctx.lineWidth = 1;
-      ctx.strokeRect(ex - (w >> 1) + 0.5, ey - (h >> 1) + 0.5, w - 1, h - 1);
+      ctx.fillStyle = this.flashFrames > 0 ? '#ffffff' : (this.isEnraged ? '#e41050' : this.color);
+      ctx.fillRect(ex - halfW, ey - halfH, w, h);
+
+      ctx.fillStyle = '#000000';
+      ctx.fillRect(ex - 2, ey - 2, 4, 4);
+
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(ex - 1, ey - 1, 2, 2);
     }
   }
 
@@ -976,7 +980,7 @@
       this.waveNumber = 1;
       this.waveActive = false;
       this.enemiesRemainingInWave = 0;
-      this.spawnTimer = 0;
+      this.spawnTimerFrames = 0;
       this.spawnerDoors = [
         { x: arenaBounds.x + arenaBounds.w / 2, y: arenaBounds.y + 4 },
         { x: arenaBounds.x + arenaBounds.w / 2, y: arenaBounds.y + arenaBounds.h - 4 },
@@ -987,22 +991,22 @@
 
     startNextWave(uiManager) {
       this.waveActive = true;
-      this.enemiesRemainingInWave = 20 + this.waveNumber * 12;
+      this.enemiesRemainingInWave = 18 + this.waveNumber * 10;
 
       if (uiManager) {
         soundEngine.playAnnouncerVoice();
         soundEngine.playCrowdRoar();
-        const waveTitle = (this.waveNumber % 5 === 0) ? `WAVE ${this.waveNumber}: BOSS CARNAGE!` : `WAVE ${this.waveNumber} - MASSIVE SWARM!`;
+        const waveTitle = (this.waveNumber % 5 === 0) ? `WAVE ${this.waveNumber}: BOSS BATTLE!` : `WAVE ${this.waveNumber} - BEGIN!`;
         uiManager.showBanner(waveTitle, 2000);
       }
     }
 
-    update(enemies, player, enemyBullets, particles, uiManager, dt) {
+    update(enemies, player, enemyBullets, particles, uiManager) {
       if (!this.waveActive) return;
-      this.spawnTimer += dt;
+      this.spawnTimerFrames++;
 
-      if (this.enemiesRemainingInWave > 0 && this.spawnTimer >= Math.max(12, 40 - this.waveNumber * 3)) {
-        this.spawnTimer = 0;
+      if (this.enemiesRemainingInWave > 0 && this.spawnTimerFrames >= Math.max(12, 40 - this.waveNumber * 3)) {
+        this.spawnTimerFrames = 0;
 
         const spawnClusterCount = Math.min(this.enemiesRemainingInWave, 2 + ((this.waveNumber / 2) | 0));
         const door = this.spawnerDoors[(Math.random() * this.spawnerDoors.length) | 0];
@@ -1016,15 +1020,15 @@
           else if (this.waveNumber >= 2 && r < 0.45) type = ENEMY_TYPES.TURRET;
           else if (this.waveNumber >= 4 && r < 0.6) type = ENEMY_TYPES.TITAN;
 
-          const offsetX = (Math.random() - 0.5) * 16;
-          const offsetY = (Math.random() - 0.5) * 16;
+          const offsetX = (Math.random() - 0.5) * 12;
+          const offsetY = (Math.random() - 0.5) * 12;
           enemies.push(new Enemy(door.x + offsetX, door.y + offsetY, type));
           this.enemiesRemainingInWave--;
         }
 
         if (particles) {
-          for (let i = 0; i < 8; i++) {
-            particles.addParticle(door.x, door.y, (Math.random() - 0.5) * 2.5, (Math.random() - 0.5) * 2.5, '#ff0055', 2, 15);
+          for (let i = 0; i < 6; i++) {
+            particles.addParticle(door.x, door.y, (Math.random() - 0.5) * 2, (Math.random() - 0.5) * 2, '#e41050', 2, 12);
           }
         }
       }
@@ -1046,22 +1050,22 @@
         const door = this.spawnerDoors[i];
         const dx = Math.floor(door.x);
         const dy = Math.floor(door.y);
-        ctx.fillStyle = '#ff0055';
-        ctx.fillRect(dx - 8, dy - 8, 16, 16);
+        ctx.fillStyle = '#e41050';
+        ctx.fillRect(dx - 6, dy - 6, 12, 12);
         ctx.fillStyle = '#ffffff';
-        ctx.fillRect(dx - 4, dy - 4, 8, 8);
+        ctx.fillRect(dx - 3, dy - 3, 6, 6);
       }
     }
   }
 
   class ScreenShake {
     constructor() { this.intensity = 0; this.offsetX = 0; this.offsetY = 0; }
-    addShake(amount) { this.intensity = Math.min(18, this.intensity + amount); }
-    update(dt) {
+    addShake(amount) { this.intensity = Math.min(16, this.intensity + amount); }
+    update() {
       if (this.intensity > 0.1) {
         this.offsetX = Math.floor((Math.random() - 0.5) * this.intensity);
         this.offsetY = Math.floor((Math.random() - 0.5) * this.intensity);
-        this.intensity *= Math.pow(0.86, dt);
+        this.intensity *= 0.86;
       } else { this.intensity = 0; this.offsetX = 0; this.offsetY = 0; }
     }
   }
@@ -1074,17 +1078,17 @@
         y: Math.floor(y),
         vx, vy, color,
         size: Math.floor(size),
-        life, maxLife: life
+        lifeFrames: life, maxLifeFrames: life
       });
-      if (this.particles.length > 250) fastRemove(this.particles, 0);
+      if (this.particles.length > 200) fastRemove(this.particles, 0);
     }
-    update(dt) {
+    update() {
       for (let i = this.particles.length - 1; i >= 0; i--) {
         const p = this.particles[i];
-        p.x += p.vx * dt; p.y += p.vy * dt;
-        p.vx *= Math.pow(0.95, dt); p.vy *= Math.pow(0.95, dt);
-        p.life -= dt;
-        if (p.life <= 0) fastRemove(this.particles, i);
+        p.x += p.vx; p.y += p.vy;
+        p.vx *= 0.95; p.vy *= 0.95;
+        p.lifeFrames--;
+        if (p.lifeFrames <= 0) fastRemove(this.particles, i);
       }
     }
 
@@ -1095,7 +1099,7 @@
         const py = Math.floor(p.y);
         const psz = Math.max(1, Math.floor(p.size));
         ctx.fillStyle = p.color;
-        ctx.globalAlpha = Math.max(0, p.life / p.maxLife);
+        ctx.globalAlpha = Math.max(0, p.lifeFrames / p.maxLifeFrames);
         ctx.fillRect(px - (psz >> 1), py - (psz >> 1), psz, psz);
       }
       ctx.globalAlpha = 1.0;
@@ -1103,7 +1107,7 @@
   }
 
   class Renderer {
-    constructor(width = 360, height = 240) {
+    constructor(width = 256, height = 224) {
       this.width = width; this.height = height;
       this.offscreenCanvas = document.createElement('canvas');
       this.offscreenCanvas.width = width;
@@ -1116,16 +1120,16 @@
     getContext() { return this.offCtx; }
 
     clear() {
-      this.offCtx.fillStyle = '#06040d';
+      this.offCtx.fillStyle = '#0c0a14';
       this.offCtx.fillRect(0, 0, this.width, this.height);
     }
 
     drawArenaGrid(arenaBounds) {
       const ctx = this.offCtx;
-      ctx.fillStyle = '#090714';
+      ctx.fillStyle = '#1a142a';
       ctx.fillRect(arenaBounds.x, arenaBounds.y, arenaBounds.w, arenaBounds.h);
 
-      ctx.strokeStyle = '#16112a'; ctx.lineWidth = 1;
+      ctx.strokeStyle = '#282040'; ctx.lineWidth = 1;
       for (let x = arenaBounds.x; x < arenaBounds.x + arenaBounds.w; x += 16) {
         ctx.beginPath(); ctx.moveTo(x, arenaBounds.y); ctx.lineTo(x, arenaBounds.y + arenaBounds.h); ctx.stroke();
       }
@@ -1133,7 +1137,7 @@
         ctx.beginPath(); ctx.moveTo(arenaBounds.x, y); ctx.lineTo(arenaBounds.x + arenaBounds.w, y); ctx.stroke();
       }
 
-      ctx.strokeStyle = '#ff0055'; ctx.lineWidth = 2;
+      ctx.strokeStyle = '#e41050'; ctx.lineWidth = 2;
       ctx.strokeRect(arenaBounds.x, arenaBounds.y, arenaBounds.w, arenaBounds.h);
     }
 
@@ -1159,7 +1163,7 @@
       ctx.globalCompositeOperation = 'screen';
       for (let i = 0; i < lights.length; i++) {
         const l = lights[i];
-        const rad = Math.floor(l.radius || 16);
+        const rad = Math.floor(l.radius || 14);
         const lx = Math.floor(l.x);
         const ly = Math.floor(l.y);
         const grad = ctx.createRadialGradient(lx, ly, 0, lx, ly, rad);
@@ -1181,7 +1185,7 @@
       for (let y = 0; y < this.height; y++) {
         for (let x = 0; x < this.width; x++) {
           const idx = (y * this.width + x) << 2;
-          const quantized = quantizeColorFast(data[idx], data[idx + 1], data[idx + 2], x, y, 0.22);
+          const quantized = quantizeColorFast(data[idx], data[idx + 1], data[idx + 2], x, y, 0.20);
           data[idx] = quantized[0]; data[idx + 1] = quantized[1]; data[idx + 2] = quantized[2];
         }
       }
@@ -1250,8 +1254,8 @@
       this.mainCanvas = document.getElementById('game-canvas');
       this.mainCtx = this.mainCanvas.getContext('2d');
 
-      this.renderer = new Renderer(360, 240);
-      this.arenaBounds = { x: 10, y: 10, w: 340, h: 220 };
+      this.renderer = new Renderer(256, 224);
+      this.arenaBounds = { x: 8, y: 8, w: 240, h: 208 };
 
       this.particles = new ParticleSystem();
       this.screenShake = new ScreenShake();
@@ -1267,9 +1271,8 @@
       this.enemies = [];
 
       this.keys = {};
-      this.mousePos = { x: 180, y: 120, isDown: false };
+      this.mousePos = { x: 128, y: 112, isDown: false };
 
-      this.lastTime = performance.now();
       this.slowMoFrames = 0;
 
       this.bindEvents();
@@ -1277,7 +1280,7 @@
       this.resizeCanvas();
 
       window.addEventListener('resize', () => this.resizeCanvas());
-      requestAnimationFrame((time) => this.loop(time));
+      requestAnimationFrame(() => this.loop());
     }
 
     triggerSlowMo(frames = 35) {
@@ -1317,8 +1320,8 @@
         const rect = this.mainCanvas.getBoundingClientRect();
         const scaleX = this.renderer.width / rect.width;
         const scaleY = this.renderer.height / rect.height;
-        this.mousePos.x = (e.clientX - rect.left) * scaleX;
-        this.mousePos.y = (e.clientY - rect.top) * scaleY;
+        this.mousePos.x = Math.floor((e.clientX - rect.left) * scaleX);
+        this.mousePos.y = Math.floor((e.clientY - rect.top) * scaleY);
       });
 
       this.mainCanvas.addEventListener('mousedown', (e) => {
@@ -1344,7 +1347,7 @@
 
     startGame() {
       soundEngine.init();
-      this.player = new Player(180, 120);
+      this.player = new Player(128, 112);
       this.crateManager = new CrateManager(this.arenaBounds);
       this.waveManager = new WaveManager(this.arenaBounds);
       this.bullets.length = 0;
@@ -1362,7 +1365,6 @@
 
       this.state = GAME_STATES.PLAYING;
       this.waveManager.startNextWave(this.uiManager);
-      this.lastTime = performance.now();
     }
 
     togglePause() {
@@ -1372,7 +1374,6 @@
       } else if (this.state === GAME_STATES.PAUSED) {
         this.state = GAME_STATES.PLAYING;
         document.getElementById('screen-pause')?.classList.add('hidden');
-        this.lastTime = performance.now();
       }
     }
 
@@ -1386,29 +1387,29 @@
       document.getElementById('screen-gameover')?.classList.remove('hidden');
     }
 
-    update(dt) {
+    update() {
       if (this.state !== GAME_STATES.PLAYING) return;
 
       let enemySlowMoFactor = 1.0;
       if (this.slowMoFrames > 0) {
-        this.slowMoFrames -= dt;
+        this.slowMoFrames--;
         enemySlowMoFactor = 0.3;
       }
 
-      this.screenShake.update(dt);
-      this.particles.update(dt);
-      this.debrisManager.update(dt);
-      this.popupManager.update(dt);
+      this.screenShake.update();
+      this.particles.update();
+      this.debrisManager.update();
+      this.popupManager.update();
 
-      this.player.update(this.keys, this.mousePos, this.arenaBounds, this.bullets, this.particles, this.screenShake, dt, this.debrisManager);
+      this.player.update(this.keys, this.mousePos, this.arenaBounds, this.bullets, this.particles, this.screenShake, this.debrisManager);
       if (this.player.hp <= 0) { this.gameOver(); return; }
 
-      this.crateManager.update(this.player, this.particles, this.uiManager, dt, this.popupManager, (f) => this.triggerSlowMo(f));
-      this.waveManager.update(this.enemies, this.player, this.enemyBullets, this.particles, this.uiManager, dt);
+      this.crateManager.update(this.player, this.particles, this.uiManager, this.popupManager, (f) => this.triggerSlowMo(f));
+      this.waveManager.update(this.enemies, this.player, this.enemyBullets, this.particles, this.uiManager);
 
       for (let i = this.bullets.length - 1; i >= 0; i--) {
         const b = this.bullets[i];
-        b.update(this.arenaBounds, this.particles, dt, this.enemies);
+        b.update(this.arenaBounds, this.particles, this.enemies);
 
         for (let j = this.enemies.length - 1; j >= 0; j--) {
           const e = this.enemies[j];
@@ -1433,13 +1434,13 @@
 
             if (e.dead) {
               this.player.killStreak++;
-              this.player.comboTimer = 120;
+              this.player.comboFrames = 120;
               this.player.comboMultiplier = Math.min(5, 1 + ((this.player.killStreak / 4) | 0));
 
               const addedScore = e.type.scoreValue * this.player.comboMultiplier;
               this.uiManager.addScore(addedScore);
 
-              this.popupManager.addPopup(e.x, e.y - 12, `+${addedScore}`, '#00ff55');
+              this.popupManager.addPopup(e.x, e.y - 12, `+${addedScore}`, '#20dc8c');
 
               if (this.player.killStreak % 5 === 0) {
                 soundEngine.playCrowdRoar();
@@ -1456,7 +1457,7 @@
 
       for (let i = this.enemyBullets.length - 1; i >= 0; i--) {
         const eb = this.enemyBullets[i];
-        eb.update(this.arenaBounds, this.particles, dt, null);
+        eb.update(this.arenaBounds, this.particles, null);
 
         const dist = Math.hypot(eb.x - this.player.x, eb.y - this.player.y);
         if (dist < (eb.size + this.player.size) * 0.6) {
@@ -1471,7 +1472,7 @@
 
       for (let i = 0; i < this.enemies.length; i++) {
         const e = this.enemies[i];
-        e.update(this.player, this.arenaBounds, this.enemyBullets, this.particles, dt, enemySlowMoFactor);
+        e.update(this.player, this.arenaBounds, this.enemyBullets, this.particles, enemySlowMoFactor);
 
         const dist = Math.hypot(e.x - this.player.x, e.y - this.player.y);
         if (dist < (e.size + this.player.size) * 0.6) {
@@ -1502,7 +1503,7 @@
           Math.floor(this.player.y),
           Math.floor(this.mousePos.x),
           Math.floor(this.mousePos.y),
-          '#00f0ff'
+          '#00e6ff'
         );
       }
 
@@ -1517,23 +1518,23 @@
       this.popupManager.draw(offCtx);
 
       const lights = [];
-      if (this.player) lights.push({ x: Math.floor(this.player.x), y: Math.floor(this.player.y), radius: 24, color: 'rgba(0, 240, 255, 0.25)' });
+      if (this.player) lights.push({ x: Math.floor(this.player.x), y: Math.floor(this.player.y), radius: 20, color: 'rgba(0, 230, 255, 0.25)' });
       if (this.crateManager && this.crateManager.activeCrate) {
         const c = this.crateManager.activeCrate;
-        lights.push({ x: Math.floor(c.x), y: Math.floor(c.y), radius: 22, color: c.isGolden ? 'rgba(255, 183, 0, 0.45)' : 'rgba(0, 240, 255, 0.3)' });
+        lights.push({ x: Math.floor(c.x), y: Math.floor(c.y), radius: 18, color: c.isGolden ? 'rgba(255, 220, 40, 0.45)' : 'rgba(0, 230, 255, 0.3)' });
       }
       for (let i = 0; i < this.bullets.length; i++) {
         const b = this.bullets[i];
-        lights.push({ x: Math.floor(b.x), y: Math.floor(b.y), radius: 10, color: 'rgba(255, 255, 255, 0.2)' });
+        lights.push({ x: Math.floor(b.x), y: Math.floor(b.y), radius: 8, color: 'rgba(255, 255, 255, 0.2)' });
       }
       for (let i = 0; i < this.enemyBullets.length; i++) {
         const eb = this.enemyBullets[i];
-        lights.push({ x: Math.floor(eb.x), y: Math.floor(eb.y), radius: 12, color: 'rgba(255, 0, 85, 0.35)' });
+        lights.push({ x: Math.floor(eb.x), y: Math.floor(eb.y), radius: 10, color: 'rgba(228, 16, 80, 0.35)' });
       }
       this.renderer.drawDynamicLighting(lights);
 
       if (this.state === GAME_STATES.PLAYING) {
-        offCtx.strokeStyle = '#00f0ff';
+        offCtx.strokeStyle = '#00e6ff';
         offCtx.lineWidth = 1;
         const cx = Math.floor(this.mousePos.x);
         const cy = Math.floor(this.mousePos.y);
@@ -1544,14 +1545,10 @@
       this.renderer.renderToScreen(this.mainCtx, this.mainCanvas.width, this.mainCanvas.height, this.screenShake);
     }
 
-    loop(currentTime) {
-      const elapsedSeconds = (currentTime - this.lastTime) / 1000;
-      this.lastTime = currentTime;
-      const dt = Math.min(elapsedSeconds * 60, 3.0);
-
-      this.update(dt);
+    loop() {
+      this.update();
       this.render();
-      requestAnimationFrame((t) => this.loop(t));
+      requestAnimationFrame(() => this.loop());
     }
   }
 
