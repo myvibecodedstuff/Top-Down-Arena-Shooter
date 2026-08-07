@@ -296,43 +296,43 @@
   const WEAPONS = {
     PISTOL: {
       id: 'PISTOL', name: 'DUAL PISTOLS', color: '#00f0ff',
-      fireRate: 110, spread: 0.08, speed: 9.0, damage: 15,
+      fireRate: 110, spread: 0.08, speed: 7.5, damage: 15,
       bulletsPerShot: 1, size: 3, recoil: 1.5,
       sound: () => soundEngine.playPistol()
     },
     SHOTGUN: {
       id: 'SHOTGUN', name: 'HEAVY SHOTGUN', color: '#f0a000',
-      fireRate: 320, spread: 0.42, speed: 7.5, damage: 16,
+      fireRate: 320, spread: 0.42, speed: 6.5, damage: 16,
       bulletsPerShot: 10, size: 2.5, recoil: 7, knockback: 4.5,
       sound: () => soundEngine.playShotgun()
     },
     PLASMA: {
       id: 'PLASMA', name: 'PLASMA RIFLE', color: '#e41050',
-      fireRate: 65, spread: 0.12, speed: 11.0, damage: 14,
+      fireRate: 65, spread: 0.12, speed: 9.5, damage: 14,
       bulletsPerShot: 1, size: 4, recoil: 1, piercing: true,
       sound: () => soundEngine.playLaser()
     },
     RAILGUN: {
       id: 'RAILGUN', name: 'HYPER RAILGUN', color: '#14dc8c',
-      fireRate: 400, spread: 0.01, speed: 20.0, damage: 100,
+      fireRate: 400, spread: 0.01, speed: 18.0, damage: 100,
       bulletsPerShot: 1, size: 4, recoil: 9, piercing: true, knockback: 6,
       sound: () => soundEngine.playLaser()
     },
     SAWBLADE: {
       id: 'SAWBLADE', name: 'BOUNCING SAW', color: '#8250dc',
-      fireRate: 250, spread: 0.1, speed: 7.0, damage: 30,
+      fireRate: 250, spread: 0.1, speed: 6.0, damage: 30,
       bulletsPerShot: 2, size: 6, bouncing: true, bouncesLeft: 6, recoil: 3, piercing: true,
       sound: () => soundEngine.playShotgun()
     },
     MISSILE: {
       id: 'MISSILE', name: 'MICRO MISSILE', color: '#ff6e00',
-      fireRate: 220, spread: 0.25, speed: 6.5, damage: 50,
+      fireRate: 220, spread: 0.25, speed: 5.5, damage: 50,
       bulletsPerShot: 3, size: 5, explosive: true, recoil: 4, homing: true,
       sound: () => soundEngine.playPistol()
     },
     FLAMETHROWER: {
       id: 'FLAMETHROWER', name: 'FLAMETHROWER', color: '#ff3300',
-      fireRate: 40, spread: 0.45, speed: 5.5, damage: 10,
+      fireRate: 40, spread: 0.45, speed: 4.8, damage: 10,
       bulletsPerShot: 3, size: 5, recoil: 0.3, flame: true, piercing: true,
       sound: () => soundEngine.playLaser()
     }
@@ -354,7 +354,7 @@
       this.dead = false;
     }
 
-    update(arenaBounds, particles, enemies) {
+    update(arenaBounds, particles, dt, enemies) {
       if (this.weapon.homing && enemies && enemies.length > 0 && !this.isEnemy) {
         let closest = null;
         let minDistSq = 140 * 140;
@@ -366,16 +366,16 @@
         if (closest) {
           const targetAngle = Math.atan2(closest.y - this.y, closest.x - this.x);
           const currentAngle = Math.atan2(this.vy, this.vx);
-          const newAngle = currentAngle + (targetAngle - currentAngle) * 0.14;
+          const newAngle = currentAngle + (targetAngle - currentAngle) * 0.14 * dt;
           const spd = Math.hypot(this.vx, this.vy);
           this.vx = Math.cos(newAngle) * spd;
           this.vy = Math.sin(newAngle) * spd;
         }
       }
 
-      this.x += this.vx;
-      this.y += this.vy;
-      this.lifeFrames++;
+      this.x += this.vx * dt;
+      this.y += this.vy * dt;
+      this.lifeFrames += dt;
 
       if (this.lifeFrames >= this.maxLifeFrames) this.dead = true;
 
@@ -432,13 +432,13 @@
       };
     }
 
-    update(player, particles, uiManager, popups, triggerSlowMo) {
+    update(player, particles, uiManager, dt, popups, triggerSlowMo) {
       if (!this.activeCrate) { this.spawnCrate(); return; }
 
       const crate = this.activeCrate;
-      crate.frameTimer++;
+      crate.frameTimer += dt;
       crate.pulseY = Math.floor(Math.sin(crate.frameTimer * 0.08) * 2.0);
-      crate.timerRingFrames--;
+      crate.timerRingFrames -= dt;
 
       const dx = player.x - crate.x;
       const dy = player.y - crate.y;
@@ -559,19 +559,19 @@
       if (this.corpses.length > 300) this.corpses.shift();
     }
 
-    update() {
+    update(dt) {
       for (let i = this.casings.length - 1; i >= 0; i--) {
         const c = this.casings[i];
-        c.x += c.vx;
-        c.y += c.vy;
-        c.vx *= 0.85;
-        c.vy *= 0.85;
-        c.lifeFrames--;
+        c.x += c.vx * dt;
+        c.y += c.vy * dt;
+        c.vx *= Math.pow(0.85, dt);
+        c.vy *= Math.pow(0.85, dt);
+        c.lifeFrames -= dt;
         if (c.lifeFrames <= 0) fastRemove(this.casings, i);
       }
       for (let i = 0; i < this.corpses.length; i++) {
         const corpse = this.corpses[i];
-        corpse.lifeFrames--;
+        corpse.lifeFrames -= dt;
         if (corpse.lifeFrames <= 0) fastRemove(this.corpses, i);
       }
     }
@@ -610,16 +610,16 @@
       });
     }
 
-    update() {
+    update(dt) {
       for (let i = this.popups.length - 1; i >= 0; i--) {
         const p = this.popups[i];
-        p.frameTickCounter++;
+        p.frameTickCounter += dt;
 
-        if ((p.frameTickCounter % 3) === 0) {
-          p.y -= 1;
+        if ((Math.floor(p.frameTickCounter) % 3) === 0) {
+          p.y -= 0.35 * dt;
         }
 
-        p.lifeFrames--;
+        p.lifeFrames -= dt;
         if (p.lifeFrames <= 0) fastRemove(this.popups, i);
       }
     }
@@ -644,7 +644,7 @@
     constructor(x, y) {
       this.x = x; this.y = y;
       this.size = 10;
-      this.speed = 2.2;
+      this.speed = 1.8;
       this.currentWeapon = WEAPONS.PISTOL;
       this.aimAngle = 0;
       this.lastShotTime = 0;
@@ -679,12 +679,12 @@
       return true;
     }
 
-    update(keys, mousePos, arenaBounds, bullets, particles, screenShake, debris) {
-      if (this.invulnerableFrames > 0) this.invulnerableFrames--;
-      if (this.dashCooldownFrames > 0) this.dashCooldownFrames--;
+    update(keys, mousePos, arenaBounds, bullets, particles, screenShake, dt, debris) {
+      if (this.invulnerableFrames > 0) this.invulnerableFrames -= dt;
+      if (this.dashCooldownFrames > 0) this.dashCooldownFrames -= dt;
 
       if (this.comboFrames > 0) {
-        this.comboFrames--;
+        this.comboFrames -= dt;
         if (this.comboFrames <= 0) {
           this.comboMultiplier = 1;
           this.killStreak = 0;
@@ -701,8 +701,8 @@
 
           if (dx !== 0 || dy !== 0) {
             const mag = Math.hypot(dx, dy);
-            this.dashVx = (dx / mag) * 5.4;
-            this.dashVy = (dy / mag) * 5.4;
+            this.dashVx = (dx / mag) * 4.8;
+            this.dashVy = (dy / mag) * 4.8;
             this.isDashing = true;
             this.dashFrames = 10;
             this.dashCooldownFrames = 35;
@@ -711,8 +711,8 @@
       }
 
       if (this.isDashing) {
-        this.x += this.dashVx; this.y += this.dashVy;
-        this.dashFrames--;
+        this.x += this.dashVx * dt; this.y += this.dashVy * dt;
+        this.dashFrames -= dt;
         if (this.dashFrames <= 0) this.isDashing = false;
         if (particles && Math.random() < 0.6) {
           particles.addParticle(this.x, this.y, 0, 0, '#00e6ff', 3, 12);
@@ -726,8 +726,8 @@
 
         if (moveX !== 0 && moveY !== 0) { moveX *= 0.7071; moveY *= 0.7071; }
 
-        this.x += moveX * this.speed;
-        this.y += moveY * this.speed;
+        this.x += moveX * this.speed * dt;
+        this.y += moveY * this.speed * dt;
       }
 
       const pad = this.size / 2;
@@ -812,11 +812,11 @@
   }
 
   const ENEMY_TYPES = {
-    SWARMER: { name: 'SWARMER BUG', hp: 14, speed: 1.9, size: 7, color: '#e41050', scoreValue: 40, behavior: 'chase' },
-    CHARGER: { name: 'CYBORG BULL', hp: 50, speed: 1.3, chargeSpeed: 4.5, size: 11, color: '#ff6e00', scoreValue: 120, behavior: 'charge' },
-    TURRET: { name: 'ARENA TURRET', hp: 35, speed: 0.5, size: 10, color: '#8250dc', scoreValue: 160, behavior: 'shoot' },
-    TITAN: { name: 'MECHA TITAN', hp: 140, speed: 0.7, size: 15, color: '#14dc8c', scoreValue: 350, behavior: 'heavy' },
-    BOSS: { name: 'BROADCAST MEGABRAIN', hp: 700, speed: 0.6, size: 26, color: '#ffdc28', scoreValue: 2000, behavior: 'boss' }
+    SWARMER: { name: 'SWARMER BUG', hp: 14, speed: 1.4, size: 7, color: '#e41050', scoreValue: 40, behavior: 'chase' },
+    CHARGER: { name: 'CYBORG BULL', hp: 50, speed: 1.0, chargeSpeed: 3.5, size: 11, color: '#ff6e00', scoreValue: 120, behavior: 'charge' },
+    TURRET: { name: 'ARENA TURRET', hp: 35, speed: 0.4, size: 10, color: '#8250dc', scoreValue: 160, behavior: 'shoot' },
+    TITAN: { name: 'MECHA TITAN', hp: 140, speed: 0.5, size: 15, color: '#14dc8c', scoreValue: 350, behavior: 'heavy' },
+    BOSS: { name: 'BROADCAST MEGABRAIN', hp: 700, speed: 0.45, size: 26, color: '#ffdc28', scoreValue: 2000, behavior: 'boss' }
   };
 
   class Enemy {
@@ -875,17 +875,17 @@
       }
     }
 
-    update(player, arenaBounds, enemyBullets, particles, slowMoFactor = 1.0) {
-      if (this.flashFrames > 0) this.flashFrames--;
+    update(player, arenaBounds, enemyBullets, particles, dt, slowMoFactor = 1.0) {
+      if (this.flashFrames > 0) this.flashFrames -= dt;
 
       const effectiveSpeed = this.speed * slowMoFactor;
 
-      this.x += this.vx * slowMoFactor;
-      this.y += this.vy * slowMoFactor;
-      this.vx *= 0.82;
-      this.vy *= 0.82;
+      this.x += this.vx * slowMoFactor * dt;
+      this.y += this.vy * slowMoFactor * dt;
+      this.vx *= Math.pow(0.82, dt);
+      this.vy *= Math.pow(0.82, dt);
 
-      this.ageFrames++;
+      this.ageFrames += dt;
       if (!this.isEnraged && this.ageFrames > 450) {
         this.isEnraged = true;
         this.speed *= 2.2;
@@ -898,32 +898,32 @@
 
       switch (this.type.behavior) {
         case 'chase':
-          this.x += (dx / dist) * effectiveSpeed;
-          this.y += (dy / dist) * effectiveSpeed;
+          this.x += (dx / dist) * effectiveSpeed * dt;
+          this.y += (dy / dist) * effectiveSpeed * dt;
           break;
 
         case 'charge':
           if (!this.isCharging) {
-            this.chargeFrames++;
-            this.x += (dx / dist) * effectiveSpeed;
-            this.y += (dy / dist) * effectiveSpeed;
+            this.chargeFrames += dt;
+            this.x += (dx / dist) * effectiveSpeed * dt;
+            this.y += (dy / dist) * effectiveSpeed * dt;
             if (this.chargeFrames > 90 && dist < 140) {
               this.isCharging = true;
               this.chargeDirX = dx / dist; this.chargeDirY = dy / dist;
               this.chargeFrames = 0;
             }
           } else {
-            this.x += this.chargeDirX * (this.type.chargeSpeed * slowMoFactor);
-            this.y += this.chargeDirY * (this.type.chargeSpeed * slowMoFactor);
-            this.chargeFrames++;
+            this.x += this.chargeDirX * (this.type.chargeSpeed * slowMoFactor) * dt;
+            this.y += this.chargeDirY * (this.type.chargeSpeed * slowMoFactor) * dt;
+            this.chargeFrames += dt;
             if (this.chargeFrames > 35) { this.isCharging = false; this.chargeFrames = 0; }
           }
           break;
 
         case 'shoot':
-          this.x += (dx / dist) * effectiveSpeed;
-          this.y += (dy / dist) * effectiveSpeed;
-          this.shootFrames++;
+          this.x += (dx / dist) * effectiveSpeed * dt;
+          this.y += (dy / dist) * effectiveSpeed * dt;
+          this.shootFrames += dt;
           if (this.shootFrames > 90) {
             this.shootFrames = 0;
             if (enemyBullets) {
@@ -934,9 +934,9 @@
 
         case 'heavy':
         case 'boss':
-          this.x += (dx / dist) * effectiveSpeed;
-          this.y += (dy / dist) * effectiveSpeed;
-          this.shootFrames++;
+          this.x += (dx / dist) * effectiveSpeed * dt;
+          this.y += (dy / dist) * effectiveSpeed * dt;
+          this.shootFrames += dt;
           if (this.shootFrames > (this.type.behavior === 'boss' ? 45 : 120)) {
             this.shootFrames = 0;
             if (enemyBullets) {
@@ -1001,9 +1001,9 @@
       }
     }
 
-    update(enemies, player, enemyBullets, particles, uiManager) {
+    update(enemies, player, enemyBullets, particles, uiManager, dt) {
       if (!this.waveActive) return;
-      this.spawnTimerFrames++;
+      this.spawnTimerFrames += dt;
 
       if (this.enemiesRemainingInWave > 0 && this.spawnTimerFrames >= Math.max(12, 40 - this.waveNumber * 3)) {
         this.spawnTimerFrames = 0;
@@ -1061,11 +1061,11 @@
   class ScreenShake {
     constructor() { this.intensity = 0; this.offsetX = 0; this.offsetY = 0; }
     addShake(amount) { this.intensity = Math.min(16, this.intensity + amount); }
-    update() {
+    update(dt) {
       if (this.intensity > 0.1) {
         this.offsetX = Math.floor((Math.random() - 0.5) * this.intensity);
         this.offsetY = Math.floor((Math.random() - 0.5) * this.intensity);
-        this.intensity *= 0.86;
+        this.intensity *= Math.pow(0.86, dt);
       } else { this.intensity = 0; this.offsetX = 0; this.offsetY = 0; }
     }
   }
@@ -1082,12 +1082,12 @@
       });
       if (this.particles.length > 200) fastRemove(this.particles, 0);
     }
-    update() {
+    update(dt) {
       for (let i = this.particles.length - 1; i >= 0; i--) {
         const p = this.particles[i];
-        p.x += p.vx; p.y += p.vy;
-        p.vx *= 0.95; p.vy *= 0.95;
-        p.lifeFrames--;
+        p.x += p.vx * dt; p.y += p.vy * dt;
+        p.vx *= Math.pow(0.95, dt); p.vy *= Math.pow(0.95, dt);
+        p.lifeFrames -= dt;
         if (p.lifeFrames <= 0) fastRemove(this.particles, i);
       }
     }
@@ -1273,6 +1273,7 @@
       this.keys = {};
       this.mousePos = { x: 128, y: 112, isDown: false };
 
+      this.lastTime = performance.now();
       this.slowMoFrames = 0;
 
       this.bindEvents();
@@ -1280,7 +1281,7 @@
       this.resizeCanvas();
 
       window.addEventListener('resize', () => this.resizeCanvas());
-      requestAnimationFrame(() => this.loop());
+      requestAnimationFrame((time) => this.loop(time));
     }
 
     triggerSlowMo(frames = 35) {
@@ -1358,6 +1359,7 @@
       this.popupManager = new PopupManager();
       this.uiManager.resetScore();
       this.slowMoFrames = 0;
+      this.lastTime = performance.now();
 
       document.getElementById('screen-title')?.classList.add('hidden');
       document.getElementById('screen-gameover')?.classList.add('hidden');
@@ -1374,6 +1376,7 @@
       } else if (this.state === GAME_STATES.PAUSED) {
         this.state = GAME_STATES.PLAYING;
         document.getElementById('screen-pause')?.classList.add('hidden');
+        this.lastTime = performance.now();
       }
     }
 
@@ -1387,29 +1390,29 @@
       document.getElementById('screen-gameover')?.classList.remove('hidden');
     }
 
-    update() {
+    update(dt) {
       if (this.state !== GAME_STATES.PLAYING) return;
 
       let enemySlowMoFactor = 1.0;
       if (this.slowMoFrames > 0) {
-        this.slowMoFrames--;
+        this.slowMoFrames -= dt;
         enemySlowMoFactor = 0.3;
       }
 
-      this.screenShake.update();
-      this.particles.update();
-      this.debrisManager.update();
-      this.popupManager.update();
+      this.screenShake.update(dt);
+      this.particles.update(dt);
+      this.debrisManager.update(dt);
+      this.popupManager.update(dt);
 
-      this.player.update(this.keys, this.mousePos, this.arenaBounds, this.bullets, this.particles, this.screenShake, this.debrisManager);
+      this.player.update(this.keys, this.mousePos, this.arenaBounds, this.bullets, this.particles, this.screenShake, dt, this.debrisManager);
       if (this.player.hp <= 0) { this.gameOver(); return; }
 
-      this.crateManager.update(this.player, this.particles, this.uiManager, this.popupManager, (f) => this.triggerSlowMo(f));
-      this.waveManager.update(this.enemies, this.player, this.enemyBullets, this.particles, this.uiManager);
+      this.crateManager.update(this.player, this.particles, this.uiManager, dt, this.popupManager, (f) => this.triggerSlowMo(f));
+      this.waveManager.update(this.enemies, this.player, this.enemyBullets, this.particles, this.uiManager, dt);
 
       for (let i = this.bullets.length - 1; i >= 0; i--) {
         const b = this.bullets[i];
-        b.update(this.arenaBounds, this.particles, this.enemies);
+        b.update(this.arenaBounds, this.particles, dt, this.enemies);
 
         for (let j = this.enemies.length - 1; j >= 0; j--) {
           const e = this.enemies[j];
@@ -1457,7 +1460,7 @@
 
       for (let i = this.enemyBullets.length - 1; i >= 0; i--) {
         const eb = this.enemyBullets[i];
-        eb.update(this.arenaBounds, this.particles, null);
+        eb.update(this.arenaBounds, this.particles, dt, null);
 
         const dist = Math.hypot(eb.x - this.player.x, eb.y - this.player.y);
         if (dist < (eb.size + this.player.size) * 0.6) {
@@ -1472,7 +1475,7 @@
 
       for (let i = 0; i < this.enemies.length; i++) {
         const e = this.enemies[i];
-        e.update(this.player, this.arenaBounds, this.enemyBullets, this.particles, enemySlowMoFactor);
+        e.update(this.player, this.arenaBounds, this.enemyBullets, this.particles, dt, enemySlowMoFactor);
 
         const dist = Math.hypot(e.x - this.player.x, e.y - this.player.y);
         if (dist < (e.size + this.player.size) * 0.6) {
@@ -1545,10 +1548,14 @@
       this.renderer.renderToScreen(this.mainCtx, this.mainCanvas.width, this.mainCanvas.height, this.screenShake);
     }
 
-    loop() {
-      this.update();
+    loop(currentTime) {
+      const elapsedSeconds = (currentTime - this.lastTime) / 1000;
+      this.lastTime = currentTime;
+      const dt = Math.min(elapsedSeconds * 60, 3.0);
+
+      this.update(dt);
       this.render();
-      requestAnimationFrame(() => this.loop());
+      requestAnimationFrame((t) => this.loop(t));
     }
   }
 
