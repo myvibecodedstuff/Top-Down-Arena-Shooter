@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CRATE ARENA - Retro Pixel & Dither Arena Shooter</title>
+  <title>CRATE ARENA - Ultra Arcade Edition</title>
   <link rel="stylesheet" href="./css/style.css">
 </head>
 <body>
 
 <div id="game-container">
-  <!-- CRT Scanline Filter Overlay -->
+  <!-- CRT Scanline Overlay -->
   <div class="crt-overlay"></div>
 
   <!-- Broadcast Alert Banner -->
@@ -47,22 +47,6 @@
           <span class="label">CONTESTANT HP:</span>
           <span id="ui-hp" class="value-highlight">100%</span>
         </div>
-        <div id="combo-container" class="stat-row">
-          <span class="label">COMBO:</span>
-          <div class="combo-bar-outer">
-            <div id="combo-bar-inner" class="combo-bar-inner"></div>
-          </div>
-        </div>
-        <div class="stat-row">
-          <span class="label">SMART BOMB:</span>
-          <span id="ui-smartbomb" class="smart-bomb-badge">READY [E]</span>
-        </div>
-        <div id="hype-container" class="stat-row">
-          <span class="label">AUDIENCE HYPE:</span>
-          <div class="hype-bar-outer">
-            <div id="hype-bar-inner" class="hype-bar-inner"></div>
-          </div>
-        </div>
       </div>
     </div>
   </div>
@@ -73,14 +57,10 @@
 
     <!-- TITLE OVERLAY -->
     <div id="screen-title" class="overlay-screen">
-      <h1 class="game-logo">CRATE ARENA<br><span style="color:var(--accent-cyan); font-size: 20px;">COMMERCIAL RELEASE EDITION</span></h1>
+      <h1 class="game-logo">CRATE ARENA<br><span style="color:var(--accent-cyan); font-size: 20px;">TV EDITION</span></h1>
       <p class="subtitle">"BIG MONEY! BIG PRIZES! TOTAL CARNAGE!"</p>
       
-      <div style="display: flex; gap: 12px;">
-        <button id="btn-start" class="btn">PLAY GAME</button>
-        <button id="btn-charselect" class="btn" style="background: var(--accent-cyan); color:#000;">CHARACTERS</button>
-        <button id="btn-shop" class="btn" style="background: var(--accent-purple);">ARMORY SHOP</button>
-      </div>
+      <button id="btn-start" class="btn">START GAME</button>
 
       <div class="palette-selector">
         <span>PALETTE:</span>
@@ -92,31 +72,9 @@
 
       <div class="controls-hint">
         [WASD / ARROWS] Move &nbsp;|&nbsp; [SPACE / SHIFT] Dash Roll<br>
-        [MOUSE] Aim & Shoot &nbsp;|&nbsp; [E / RIGHT CLICK] Smart Bomb<br>
-        <span style="color:var(--accent-yellow);">COLLECT CRATES ➔ EVOLVE WEAPONS ➔ TRIGGER OVERDRIVE!</span>
+        [MOUSE] Aim & Shoot &nbsp;|&nbsp; [P] Pause Game<br>
+        <span style="color:var(--accent-yellow);">PICK UP CRATES TO SWAP WEAPONS & SCORE POINTS!</span>
       </div>
-    </div>
-
-    <!-- CHARACTER SELECT OVERLAY -->
-    <div id="screen-charselect" class="overlay-screen hidden">
-      <h1 class="game-logo" style="font-size: 24px;">SELECT CONTESTANT CLASS</h1>
-      <div id="char-grid-container" class="char-grid"></div>
-      <button id="btn-charselect-back" class="btn" style="padding: 10px 20px; font-size: 11px;">BACK TO TITLE</button>
-    </div>
-
-    <!-- TV ARMORY SHOP OVERLAY -->
-    <div id="screen-shop" class="overlay-screen hidden">
-      <h1 class="game-logo" style="font-size: 24px;">TV STUDIO ARMORY SHOP</h1>
-      <div style="font-size: 14px; color: var(--accent-yellow);">SHOW CASH: $<span id="shop-cash-display">0</span></div>
-      <div id="shop-items-container" class="shop-grid"></div>
-      <button id="btn-shop-back" class="btn" style="padding: 10px 20px; font-size: 11px;">BACK TO TITLE</button>
-    </div>
-
-    <!-- PERK SELECTION OVERLAY -->
-    <div id="screen-perks" class="overlay-screen hidden">
-      <h1 class="game-logo" style="font-size: 24px;">SELECT TV SPONSORSHIP PERK</h1>
-      <p class="subtitle">"THE AUDIENCE CHOOSES YOUR UPGRADE!"</p>
-      <div id="perk-cards-container" class="perk-cards-grid"></div>
     </div>
 
     <!-- PAUSE OVERLAY -->
@@ -135,14 +93,12 @@
         <div>CRATES COLLECTED: <span id="final-crates" style="color:var(--accent-cyan);">0</span></div>
       </div>
 
-      <button id="btn-restart" class="btn">AGAIN!</button>
+      <button id="btn-restart" class="btn">AGAIN! [SPACE]</button>
     </div>
   </div>
 </div>
 
 <script src="./js/game.js"></script>
-
-
 
 
 
