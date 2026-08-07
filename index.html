@@ -3,94 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CRATE ARENA - Cyber Arcade Edition</title>
-  <link rel="stylesheet" href="./css/style.css">
+  <title>CRATE ARENA</title>
+  <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-
-<div id="game-container">
-  <!-- CRT Scanline Overlay -->
-  <div class="crt-overlay"></div>
-
-  <!-- Broadcast Alert Banner -->
-  <div id="broadcast-banner">SUPER CRATE!</div>
-
-  <!-- HUD Overlay -->
-  <div id="hud">
-    <div class="top-bar">
-      <div class="stat-box">
-        <div class="brand-title">📺 CRATE ARENA</div>
-        <div class="stat-row">
-          <span class="label">SCORE:</span>
-          <span id="ui-score" class="value-highlight">000000</span>
-        </div>
-        <div class="stat-row">
-          <span class="label">HI-SCORE:</span>
-          <span id="ui-hiscore" class="value">000000</span>
-        </div>
-      </div>
-
-      <div class="stat-box" style="text-align: right; align-items: flex-end;">
-        <div class="stat-row">
-          <span class="label">WAVE:</span>
-          <span id="ui-wave" class="value-highlight">WAVE 1</span>
-        </div>
-        <div class="stat-row">
-          <span class="label">CRATES:</span>
-          <span id="ui-crates" class="value">0</span>
-        </div>
-        <div class="stat-row">
-          <span class="label">WEAPON:</span>
-          <span id="ui-weapon" class="value" style="color: var(--accent-cyan);">DUAL PISTOLS</span>
-        </div>
-        <div class="stat-row">
-          <span class="label">CONTESTANT HP:</span>
-          <span id="ui-hp" class="value-highlight">100%</span>
-        </div>
-      </div>
+  <div id="game-container">
+    <div id="canvas-wrapper">
+      <canvas id="game-canvas"></canvas>
+      <div class="crt-overlay"></div>
     </div>
   </div>
 
-  <!-- Canvas Wrapper -->
-  <div id="canvas-wrapper">
-    <canvas id="game-canvas"></canvas>
-
-    <!-- TITLE OVERLAY -->
-    <div id="screen-title" class="overlay-screen">
-      <h1 class="game-logo">CRATE ARENA<br><span style="color:var(--accent-cyan); font-size: 20px;">TV EDITION</span></h1>
-      <p class="subtitle">"BIG MONEY! BIG PRIZES! TOTAL CARNAGE!"</p>
-      
-      <button id="btn-start" class="btn">START GAME</button>
-
-      <div class="controls-hint">
-        [WASD / ARROWS] Move &nbsp;|&nbsp; [SPACE / SHIFT] Dash Roll<br>
-        [MOUSE] Aim & Shoot &nbsp;|&nbsp; [P] Pause Game<br>
-        <span style="color:var(--accent-yellow);">PICK UP CRATES TO SWAP WEAPONS & SCORE POINTS!</span>
-      </div>
-    </div>
-
-    <!-- PAUSE OVERLAY -->
-    <div id="screen-pause" class="overlay-screen hidden">
-      <h1 class="game-logo">SHOW PAUSED</h1>
-      <button id="btn-resume" class="btn">RESUME SHOW</button>
-    </div>
-
-    <!-- GAMEOVER OVERLAY -->
-    <div id="screen-gameover" class="overlay-screen hidden">
-      <h1 class="game-logo" style="color: var(--accent-neon);">GAME OVER</h1>
-      <p class="subtitle">"THANKS FOR PLAYING, CONTESTANT!"</p>
-      
-      <div style="font-size: 14px; display: flex; flex-direction: column; gap: 8px; margin: 10px 0;">
-        <div>FINAL SCORE: <span id="final-score" style="color:var(--accent-yellow);">0</span></div>
-        <div>CRATES COLLECTED: <span id="final-crates" style="color:var(--accent-cyan);">0</span></div>
-      </div>
-
-      <button id="btn-restart" class="btn">AGAIN! [SPACE]</button>
-    </div>
-  </div>
-</div>
-
-<script src="./js/game.js"></script>
+  <script src="js/game.js"></script>
 
 
 
