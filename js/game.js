@@ -9,52 +9,28 @@
     [15/16,  7/16, 13/16,  5/16]
   ];
 
-  const PALETTES = {
-    CYBERPUNK: {
-      name: 'CYBERPUNK NEON',
-      colors: [
-        [10, 8, 20],     [24, 20, 48],    [64, 28, 96],
-        [140, 32, 110],  [255, 0, 85],    [255, 80, 140],
-        [0, 180, 216],   [0, 240, 255],   [16, 185, 129],
-        [52, 211, 153],  [251, 191, 36],  [255, 230, 0],
-        [244, 244, 245]
-      ]
-    },
-    AMBER: {
-      name: 'CRT AMBER',
-      colors: [
-        [8, 5, 0],    [30, 18, 0],  [75, 45, 0],
-        [130, 78, 0], [190, 114, 0],[245, 150, 0],
-        [255, 190, 40],[255, 235, 160]
-      ]
-    },
-    GAMEBOY: {
-      name: 'GAMEBOY GREEN',
-      colors: [
-        [15, 56, 15],  [48, 98, 48],
-        [139, 172, 15],[155, 188, 15]
-      ]
-    },
-    VOID: {
-      name: 'VOID MONOCHROME',
-      colors: [
-        [10, 10, 12],  [35, 35, 40],   [75, 75, 85],
-        [130, 130, 145],[195, 195, 210],[250, 250, 255]
-      ]
-    }
-  };
+  const CYBER_ARCADE_PALETTE = [
+    [6, 4, 13],
+    [18, 14, 34],
+    [45, 20, 75],
+    [110, 25, 90],
+    [255, 0, 85],
+    [255, 60, 120],
+    [0, 160, 200],
+    [0, 240, 255],
+    [0, 255, 170],
+    [50, 220, 120],
+    [255, 150, 0],
+    [255, 183, 0],
+    [255, 235, 60],
+    [139, 92, 246],
+    [200, 200, 220],
+    [250, 250, 255]
+  ];
 
-  let activePaletteName = 'CYBERPUNK';
   const colorCache = new Map();
 
-  function setActivePalette(name) {
-    if (PALETTES[name]) {
-      activePaletteName = name;
-      colorCache.clear();
-    }
-  }
-
-  function quantizeColorFast(r, g, b, x, y, paletteName = activePaletteName, ditherStrength = 0.22) {
+  function quantizeColorFast(r, g, b, x, y, ditherStrength = 0.22) {
     const ditherValue = BAYER_4X4[y & 3][x & 3] - 0.5;
     const offset = ditherValue * ditherStrength * 255;
 
@@ -70,12 +46,11 @@
     let cached = colorCache.get(key);
     if (cached) return cached;
 
-    const palette = PALETTES[paletteName].colors;
-    let closest = palette[0];
+    let closest = CYBER_ARCADE_PALETTE[0];
     let minDistance = 1000000;
 
-    for (let i = 0; i < palette.length; i++) {
-      const c = palette[i];
+    for (let i = 0; i < CYBER_ARCADE_PALETTE.length; i++) {
+      const c = CYBER_ARCADE_PALETTE[i];
       const dist = 0.3 * (cr - c[0]) * (cr - c[0]) + 0.59 * (cg - c[1]) * (cg - c[1]) + 0.11 * (cb - c[2]) * (cb - c[2]);
       if (dist < minDistance) {
         minDistance = dist;
@@ -326,7 +301,7 @@
       sound: () => soundEngine.playPistol()
     },
     SHOTGUN: {
-      id: 'SHOTGUN', name: 'HEAVY SHOTGUN', color: '#ffe600',
+      id: 'SHOTGUN', name: 'HEAVY SHOTGUN', color: '#ffb700',
       fireRate: 320, spread: 0.42, speed: 8.5, damage: 16,
       bulletsPerShot: 10, size: 2.5, recoil: 7, knockback: 4.5,
       sound: () => soundEngine.playShotgun()
@@ -338,13 +313,13 @@
       sound: () => soundEngine.playLaser()
     },
     RAILGUN: {
-      id: 'RAILGUN', name: 'HYPER RAILGUN', color: '#00ff66',
+      id: 'RAILGUN', name: 'HYPER RAILGUN', color: '#00ffaa',
       fireRate: 400, spread: 0.01, speed: 22, damage: 100,
       bulletsPerShot: 1, size: 4, recoil: 9, piercing: true, knockback: 6,
       sound: () => soundEngine.playLaser()
     },
     SAWBLADE: {
-      id: 'SAWBLADE', name: 'BOUNCING SAW', color: '#a855f7',
+      id: 'SAWBLADE', name: 'BOUNCING SAW', color: '#8b5cf6',
       fireRate: 250, spread: 0.1, speed: 7.5, damage: 30,
       bulletsPerShot: 2, size: 6, bouncing: true, bouncesLeft: 6, recoil: 3, piercing: true,
       sound: () => soundEngine.playShotgun()
@@ -371,7 +346,7 @@
     init(x, y, vx, vy, weapon, isEnemy = false) {
       this.x = x; this.y = y; this.vx = vx; this.vy = vy;
       this.weapon = weapon;
-      this.color = isEnemy ? '#ff0033' : weapon.color;
+      this.color = isEnemy ? '#ff0055' : weapon.color;
       this.size = weapon.size || 3;
       this.damage = weapon.damage || 10;
       this.piercing = weapon.piercing || false;
@@ -495,7 +470,7 @@
         }
 
         if (particles) {
-          const pColor = crate.isGolden ? '#ffe600' : '#00f0ff';
+          const pColor = crate.isGolden ? '#ffb700' : '#00f0ff';
           for (let i = 0; i < 30; i++) {
             const angle = (Math.PI * 2 * i) / 30;
             const spd = 2 + Math.random() * 4.0;
@@ -520,7 +495,7 @@
       ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
       ctx.fillRect((c.x - half) | 0, (c.y + half - 2) | 0, c.size, 4);
 
-      ctx.fillStyle = c.isGolden ? '#ffe600' : '#ff9900';
+      ctx.fillStyle = c.isGolden ? '#ffb700' : '#ff9900';
       ctx.fillRect((c.x - half) | 0, (drawY - half) | 0, c.size, c.size);
 
       ctx.strokeStyle = '#ffffff';
@@ -534,7 +509,7 @@
       ctx.fillText(c.isGolden ? '★' : '?', (c.x) | 0, (drawY + 1) | 0);
 
       const ringPct = Math.max(0, c.timerRing / c.maxTimerRing);
-      ctx.strokeStyle = c.isGolden ? '#ffe600' : '#00f0ff';
+      ctx.strokeStyle = c.isGolden ? '#ffb700' : '#00f0ff';
       ctx.lineWidth = 1.5;
       ctx.beginPath();
       ctx.arc((c.x) | 0, (drawY) | 0, 12, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * ringPct);
@@ -556,7 +531,7 @@
         vx: Math.cos(ejectAngle) * spd,
         vy: Math.sin(ejectAngle) * spd,
         life: 240,
-        color: '#ffe600'
+        color: '#c0c0d0'
       });
       if (this.casings.length > 150) this.casings.shift();
     }
@@ -668,7 +643,7 @@
       if (particles) {
         for (let i = 0; i < 16; i++) {
           const ang = Math.random() * Math.PI * 2;
-          particles.addParticle(this.x, this.y, Math.cos(ang) * 2.5, Math.sin(ang) * 2.5, '#ff0033', 2.5, 20);
+          particles.addParticle(this.x, this.y, Math.cos(ang) * 2.5, Math.sin(ang) * 2.5, '#ff0055', 2.5, 20);
         }
       }
       return true;
@@ -782,10 +757,10 @@
       if (this.invulnerableTimer > 0 && (((this.invulnerableTimer / 3) | 0) % 2 === 0)) return;
 
       const half = this.size / 2;
-      ctx.fillStyle = this.isDashing ? '#00f0ff' : '#ffe600';
+      ctx.fillStyle = this.isDashing ? '#00f0ff' : '#ffb700';
       ctx.fillRect((this.x - half) | 0, (this.y - half) | 0, this.size, this.size);
 
-      ctx.fillStyle = '#000000';
+      ctx.fillStyle = '#06040d';
       const eyeX = this.x + Math.cos(this.aimAngle) * 3;
       const eyeY = this.y + Math.sin(this.aimAngle) * 3;
       ctx.fillRect((eyeX - 1.5) | 0, (eyeY - 1.5) | 0, 3, 3);
@@ -805,9 +780,9 @@
   const ENEMY_TYPES = {
     SWARMER: { name: 'SWARMER BUG', hp: 14, speed: 1.9, size: 7, color: '#ff0055', scoreValue: 40, behavior: 'chase' },
     CHARGER: { name: 'CYBORG BULL', hp: 50, speed: 1.3, chargeSpeed: 4.5, size: 11, color: '#ff9900', scoreValue: 120, behavior: 'charge' },
-    TURRET: { name: 'ARENA TURRET', hp: 35, speed: 0.5, size: 10, color: '#a855f7', scoreValue: 160, behavior: 'shoot' },
-    TITAN: { name: 'MECHA TITAN', hp: 140, speed: 0.7, size: 15, color: '#00ff66', scoreValue: 350, behavior: 'heavy' },
-    BOSS: { name: 'BROADCAST MEGABRAIN', hp: 700, speed: 0.6, size: 26, color: '#ffe600', scoreValue: 2000, behavior: 'boss' }
+    TURRET: { name: 'ARENA TURRET', hp: 35, speed: 0.5, size: 10, color: '#8b5cf6', scoreValue: 160, behavior: 'shoot' },
+    TITAN: { name: 'MECHA TITAN', hp: 140, speed: 0.7, size: 15, color: '#00ffaa', scoreValue: 350, behavior: 'heavy' },
+    BOSS: { name: 'BROADCAST MEGABRAIN', hp: 700, speed: 0.6, size: 26, color: '#ffb700', scoreValue: 2000, behavior: 'boss' }
   };
 
   class Enemy {
@@ -884,7 +859,7 @@
       if (!this.isEnraged && this.age > 450) {
         this.isEnraged = true;
         this.speed *= 2.2;
-        this.color = '#ff0000';
+        this.color = '#ff0033';
       }
 
       const dx = player.x - this.x;
@@ -922,7 +897,7 @@
           if (this.shootTimer > 90) {
             this.shootTimer = 0;
             if (enemyBullets) {
-              enemyBullets.push(new Bullet(this.x, this.y, (dx / dist) * 3, (dy / dist) * 3, { size: 4, damage: 15, color: '#ff0033' }, true));
+              enemyBullets.push(new Bullet(this.x, this.y, (dx / dist) * 3, (dy / dist) * 3, { size: 4, damage: 15, color: '#ff0055' }, true));
             }
           }
           break;
@@ -938,7 +913,7 @@
               const shots = this.type.behavior === 'boss' ? 8 : 4;
               for (let i = 0; i < shots; i++) {
                 const ang = (Math.PI * 2 * i) / shots + Math.atan2(dy, dx);
-                enemyBullets.push(new Bullet(this.x, this.y, Math.cos(ang) * 2.5, Math.sin(ang) * 2.5, { size: 4, damage: 12, color: '#ff0033' }, true));
+                enemyBullets.push(new Bullet(this.x, this.y, Math.cos(ang) * 2.5, Math.sin(ang) * 2.5, { size: 4, damage: 12, color: '#ff0055' }, true));
               }
             }
           }
@@ -954,7 +929,7 @@
       const w = this.size * this.squishX;
       const h = this.size * this.squishY;
 
-      ctx.fillStyle = this.flashTimer > 0 ? '#ffffff' : (this.isEnraged ? '#ff0000' : this.color);
+      ctx.fillStyle = this.flashTimer > 0 ? '#ffffff' : (this.isEnraged ? '#ff0033' : this.color);
       ctx.fillRect((this.x - w / 2) | 0, (this.y - h / 2) | 0, w | 0, h | 0);
       ctx.strokeStyle = '#000000';
       ctx.lineWidth = 1;
@@ -1096,16 +1071,16 @@
     getContext() { return this.offCtx; }
 
     clear() {
-      this.offCtx.fillStyle = '#05040a';
+      this.offCtx.fillStyle = '#06040d';
       this.offCtx.fillRect(0, 0, this.width, this.height);
     }
 
     drawArenaGrid(arenaBounds) {
       const ctx = this.offCtx;
-      ctx.fillStyle = '#0a0814';
+      ctx.fillStyle = '#090714';
       ctx.fillRect(arenaBounds.x, arenaBounds.y, arenaBounds.w, arenaBounds.h);
 
-      ctx.strokeStyle = '#18142a'; ctx.lineWidth = 1;
+      ctx.strokeStyle = '#16112a'; ctx.lineWidth = 1;
       for (let x = arenaBounds.x; x < arenaBounds.x + arenaBounds.w; x += 16) {
         ctx.beginPath(); ctx.moveTo(x, arenaBounds.y); ctx.lineTo(x, arenaBounds.y + arenaBounds.h); ctx.stroke();
       }
@@ -1143,7 +1118,7 @@
       for (let y = 0; y < this.height; y++) {
         for (let x = 0; x < this.width; x++) {
           const idx = (y * this.width + x) << 2;
-          const quantized = quantizeColorFast(data[idx], data[idx + 1], data[idx + 2], x, y, activePaletteName, 0.22);
+          const quantized = quantizeColorFast(data[idx], data[idx + 1], data[idx + 2], x, y, 0.22);
           data[idx] = quantized[0]; data[idx + 1] = quantized[1]; data[idx + 2] = quantized[2];
         }
       }
@@ -1302,14 +1277,6 @@
       document.getElementById('btn-start')?.addEventListener('click', () => this.startGame());
       document.getElementById('btn-restart')?.addEventListener('click', () => this.startGame());
       document.getElementById('btn-resume')?.addEventListener('click', () => this.togglePause());
-
-      document.querySelectorAll('.palette-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          document.querySelectorAll('.palette-btn').forEach(b => b.classList.remove('active'));
-          e.target.classList.add('active');
-          setActivePalette(e.target.getAttribute('data-palette'));
-        });
-      });
     }
 
     startGame() {
@@ -1409,7 +1376,7 @@
               const addedScore = e.type.scoreValue * this.player.comboMultiplier;
               this.uiManager.addScore(addedScore);
 
-              this.popupManager.addPopup(e.x, e.y - 12, `+${addedScore}`, '#00ff66');
+              this.popupManager.addPopup(e.x, e.y - 12, `+${addedScore}`, '#00ff55');
 
               if (this.player.killStreak % 5 === 0) {
                 soundEngine.playCrowdRoar();
@@ -1467,7 +1434,7 @@
       if (this.crateManager) this.crateManager.draw(offCtx);
 
       if (this.player && this.state === GAME_STATES.PLAYING) {
-        offCtx.strokeStyle = 'rgba(255, 0, 85, 0.25)';
+        offCtx.strokeStyle = 'rgba(0, 240, 255, 0.35)';
         offCtx.lineWidth = 1;
         offCtx.beginPath();
         offCtx.moveTo((this.player.x) | 0, (this.player.y) | 0);
@@ -1489,7 +1456,7 @@
       if (this.player) lights.push({ x: this.player.x, y: this.player.y, radius: 24, color: 'rgba(0, 240, 255, 0.25)' });
       if (this.crateManager && this.crateManager.activeCrate) {
         const c = this.crateManager.activeCrate;
-        lights.push({ x: c.x, y: c.y, radius: 22, color: c.isGolden ? 'rgba(255, 230, 0, 0.4)' : 'rgba(0, 240, 255, 0.3)' });
+        lights.push({ x: c.x, y: c.y, radius: 22, color: c.isGolden ? 'rgba(255, 183, 0, 0.45)' : 'rgba(0, 240, 255, 0.3)' });
       }
       for (let i = 0; i < this.bullets.length; i++) {
         const b = this.bullets[i];
