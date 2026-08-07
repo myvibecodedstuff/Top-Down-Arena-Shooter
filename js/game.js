@@ -532,7 +532,8 @@
       const ejectAngle = angle + Math.PI / 2 + (Math.random() - 0.5) * 0.5;
       const spd = 1.8 + Math.random() * 2.0;
       this.casings.push({
-        x, y,
+        x: Math.floor(x),
+        y: Math.floor(y),
         vx: Math.cos(ejectAngle) * spd,
         vy: Math.sin(ejectAngle) * spd,
         life: 240,
@@ -1068,7 +1069,13 @@
   class ParticleSystem {
     constructor() { this.particles = []; }
     addParticle(x, y, vx, vy, color, size, life) {
-      this.particles.push({ x, y, vx, vy, color, size: Math.floor(size), life, maxLife: life });
+      this.particles.push({
+        x: Math.floor(x),
+        y: Math.floor(y),
+        vx, vy, color,
+        size: Math.floor(size),
+        life, maxLife: life
+      });
       if (this.particles.length > 250) fastRemove(this.particles, 0);
     }
     update(dt) {
@@ -1080,12 +1087,13 @@
         if (p.life <= 0) fastRemove(this.particles, i);
       }
     }
+
     draw(ctx) {
       for (let i = 0; i < this.particles.length; i++) {
         const p = this.particles[i];
         const px = Math.floor(p.x);
         const py = Math.floor(p.y);
-        const psz = Math.floor(p.size);
+        const psz = Math.max(1, Math.floor(p.size));
         ctx.fillStyle = p.color;
         ctx.globalAlpha = Math.max(0, p.life / p.maxLife);
         ctx.fillRect(px - (psz >> 1), py - (psz >> 1), psz, psz);
@@ -1127,6 +1135,22 @@
 
       ctx.strokeStyle = '#ff0055'; ctx.lineWidth = 2;
       ctx.strokeRect(arenaBounds.x, arenaBounds.y, arenaBounds.w, arenaBounds.h);
+    }
+
+    drawPixelDottedLaser(x1, y1, x2, y2, color) {
+      const ctx = this.offCtx;
+      ctx.fillStyle = color;
+      const dx = x2 - x1;
+      const dy = y2 - y1;
+      const dist = Math.hypot(dx, dy);
+      const stepCount = Math.floor(dist / 4);
+
+      for (let i = 0; i <= stepCount; i++) {
+        const t = stepCount === 0 ? 0 : i / stepCount;
+        const px = Math.floor(x1 + dx * t);
+        const py = Math.floor(y1 + dy * t);
+        ctx.fillRect(px, py, 1, 1);
+      }
     }
 
     drawDynamicLighting(lights) {
@@ -1473,12 +1497,13 @@
       if (this.crateManager) this.crateManager.draw(offCtx);
 
       if (this.player && this.state === GAME_STATES.PLAYING) {
-        offCtx.strokeStyle = 'rgba(0, 240, 255, 0.35)';
-        offCtx.lineWidth = 1;
-        offCtx.beginPath();
-        offCtx.moveTo(Math.floor(this.player.x), Math.floor(this.player.y));
-        offCtx.lineTo(Math.floor(this.mousePos.x), Math.floor(this.mousePos.y));
-        offCtx.stroke();
+        this.renderer.drawPixelDottedLaser(
+          Math.floor(this.player.x),
+          Math.floor(this.player.y),
+          Math.floor(this.mousePos.x),
+          Math.floor(this.mousePos.y),
+          '#00f0ff'
+        );
       }
 
       for (let i = 0; i < this.enemies.length; i++) this.enemies[i].draw(offCtx);
