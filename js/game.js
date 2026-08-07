@@ -400,8 +400,11 @@
     }
 
     draw(ctx) {
+      const px = Math.floor(this.x);
+      const py = Math.floor(this.y);
+      const sz = Math.floor(this.size);
       ctx.fillStyle = this.color;
-      ctx.fillRect((this.x - this.size / 2) | 0, (this.y - this.size / 2) | 0, this.size, this.size);
+      ctx.fillRect(px - (sz >> 1), py - (sz >> 1), sz, sz);
     }
   }
 
@@ -414,8 +417,8 @@
 
     spawnCrate() {
       const padding = 24;
-      const x = this.arenaBounds.x + padding + Math.random() * (this.arenaBounds.w - padding * 2);
-      const y = this.arenaBounds.y + padding + Math.random() * (this.arenaBounds.h - padding * 2);
+      const x = Math.floor(this.arenaBounds.x + padding + Math.random() * (this.arenaBounds.w - padding * 2));
+      const y = Math.floor(this.arenaBounds.y + padding + Math.random() * (this.arenaBounds.h - padding * 2));
       const isGolden = Math.random() < 0.2;
 
       this.activeCrate = {
@@ -434,7 +437,7 @@
 
       const crate = this.activeCrate;
       crate.bounceTimer += 0.08 * dt;
-      crate.pulse = Math.sin(crate.bounceTimer) * 2.5;
+      crate.pulse = Math.floor(Math.sin(crate.bounceTimer) * 2.5);
       crate.timerRing -= dt;
 
       const dx = player.x - crate.x;
@@ -489,30 +492,32 @@
     draw(ctx) {
       if (!this.activeCrate) return;
       const c = this.activeCrate;
-      const drawY = c.y + c.pulse;
-      const half = c.size / 2;
+      const cx = Math.floor(c.x);
+      const cy = Math.floor(c.y);
+      const drawY = Math.floor(c.y + c.pulse);
+      const half = c.size >> 1;
 
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
-      ctx.fillRect((c.x - half) | 0, (c.y + half - 2) | 0, c.size, 4);
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
+      ctx.fillRect(cx - half, cy + half - 2, c.size, 4);
 
       ctx.fillStyle = c.isGolden ? '#ffb700' : '#ff9900';
-      ctx.fillRect((c.x - half) | 0, (drawY - half) | 0, c.size, c.size);
+      ctx.fillRect(cx - half, drawY - half, c.size, c.size);
 
       ctx.strokeStyle = '#ffffff';
       ctx.lineWidth = 1;
-      ctx.strokeRect(((c.x - half) | 0) + 0.5, ((drawY - half) | 0) + 0.5, c.size - 1, c.size - 1);
+      ctx.strokeRect(cx - half + 0.5, drawY - half + 0.5, c.size - 1, c.size - 1);
 
       ctx.fillStyle = '#ffffff';
       ctx.font = '8px "Press Start 2P"';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(c.isGolden ? '★' : '?', (c.x) | 0, (drawY + 1) | 0);
+      ctx.fillText(c.isGolden ? '★' : '?', cx, drawY + 1);
 
       const ringPct = Math.max(0, c.timerRing / c.maxTimerRing);
       ctx.strokeStyle = c.isGolden ? '#ffb700' : '#00f0ff';
-      ctx.lineWidth = 1.5;
+      ctx.lineWidth = 1;
       ctx.beginPath();
-      ctx.arc((c.x) | 0, (drawY) | 0, 12, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * ringPct);
+      ctx.arc(cx, drawY, 12, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * ringPct);
       ctx.stroke();
     }
   }
@@ -538,7 +543,8 @@
 
     addCorpse(x, y, color, size) {
       this.corpses.push({
-        x, y,
+        x: Math.floor(x),
+        y: Math.floor(y),
         size: size || 8,
         color,
         life: 360
@@ -566,9 +572,12 @@
     draw(ctx) {
       for (let i = 0; i < this.corpses.length; i++) {
         const corpse = this.corpses[i];
+        const cx = Math.floor(corpse.x);
+        const cy = Math.floor(corpse.y);
+        const cz = Math.floor(corpse.size);
         ctx.fillStyle = corpse.color;
         ctx.globalAlpha = Math.max(0, corpse.life / 360) * 0.75;
-        ctx.fillRect((corpse.x - corpse.size / 2) | 0, (corpse.y - corpse.size / 2) | 0, corpse.size, corpse.size - 2);
+        ctx.fillRect(cx - (cz >> 1), cy - (cz >> 1), cz, cz - 2);
       }
       ctx.globalAlpha = 1.0;
 
@@ -576,7 +585,7 @@
         const c = this.casings[i];
         ctx.fillStyle = c.color;
         ctx.globalAlpha = Math.max(0, c.life / 240);
-        ctx.fillRect((c.x) | 0, (c.y) | 0, 2, 1);
+        ctx.fillRect(Math.floor(c.x), Math.floor(c.y), 2, 1);
       }
       ctx.globalAlpha = 1.0;
     }
@@ -585,7 +594,7 @@
   class PopupManager {
     constructor() { this.popups = []; }
     addPopup(x, y, text, color = '#ffffff') {
-      this.popups.push({ x, y, text, color, vy: -0.8, life: 45 });
+      this.popups.push({ x: Math.floor(x), y: Math.floor(y), text, color, vy: -0.8, life: 45 });
     }
     update(dt) {
       for (let i = this.popups.length - 1; i >= 0; i--) {
@@ -600,8 +609,8 @@
       ctx.textAlign = 'center';
       for (let i = 0; i < this.popups.length; i++) {
         const p = this.popups[i];
-        const px = (p.x) | 0;
-        const py = (p.y) | 0;
+        const px = Math.floor(p.x);
+        const py = Math.floor(p.y);
         ctx.fillStyle = '#000000';
         ctx.fillText(p.text, px + 1, py + 1);
         ctx.fillStyle = p.color;
@@ -756,22 +765,25 @@
     draw(ctx) {
       if (this.invulnerableTimer > 0 && (((this.invulnerableTimer / 3) | 0) % 2 === 0)) return;
 
-      const half = this.size / 2;
+      const px = Math.floor(this.x);
+      const py = Math.floor(this.y);
+      const half = this.size >> 1;
+
       ctx.fillStyle = this.isDashing ? '#00f0ff' : '#ffb700';
-      ctx.fillRect((this.x - half) | 0, (this.y - half) | 0, this.size, this.size);
+      ctx.fillRect(px - half, py - half, this.size, this.size);
 
       ctx.fillStyle = '#06040d';
-      const eyeX = this.x + Math.cos(this.aimAngle) * 3;
-      const eyeY = this.y + Math.sin(this.aimAngle) * 3;
-      ctx.fillRect((eyeX - 1.5) | 0, (eyeY - 1.5) | 0, 3, 3);
+      const eyeX = Math.floor(this.x + Math.cos(this.aimAngle) * 3);
+      const eyeY = Math.floor(this.y + Math.sin(this.aimAngle) * 3);
+      ctx.fillRect(eyeX - 1, eyeY - 1, 3, 3);
 
       ctx.strokeStyle = this.currentWeapon.color;
-      ctx.lineWidth = 2;
+      ctx.lineWidth = 1;
       ctx.beginPath();
-      ctx.moveTo((this.x) | 0, (this.y) | 0);
+      ctx.moveTo(px, py);
       ctx.lineTo(
-        (this.x + Math.cos(this.aimAngle) * 10) | 0,
-        (this.y + Math.sin(this.aimAngle) * 10) | 0
+        Math.floor(this.x + Math.cos(this.aimAngle) * 10),
+        Math.floor(this.y + Math.sin(this.aimAngle) * 10)
       );
       ctx.stroke();
     }
@@ -926,14 +938,16 @@
     }
 
     draw(ctx) {
-      const w = this.size * this.squishX;
-      const h = this.size * this.squishY;
+      const ex = Math.floor(this.x);
+      const ey = Math.floor(this.y);
+      const w = Math.floor(this.size * this.squishX);
+      const h = Math.floor(this.size * this.squishY);
 
       ctx.fillStyle = this.flashTimer > 0 ? '#ffffff' : (this.isEnraged ? '#ff0033' : this.color);
-      ctx.fillRect((this.x - w / 2) | 0, (this.y - h / 2) | 0, w | 0, h | 0);
+      ctx.fillRect(ex - (w >> 1), ey - (h >> 1), w, h);
       ctx.strokeStyle = '#000000';
       ctx.lineWidth = 1;
-      ctx.strokeRect(((this.x - w / 2) | 0) + 0.5, ((this.y - h / 2) | 0) + 0.5, (w - 1) | 0, (h - 1) | 0);
+      ctx.strokeRect(ex - (w >> 1) + 0.5, ey - (h >> 1) + 0.5, w - 1, h - 1);
     }
   }
 
@@ -1011,10 +1025,12 @@
     drawDoors(ctx) {
       for (let i = 0; i < this.spawnerDoors.length; i++) {
         const door = this.spawnerDoors[i];
+        const dx = Math.floor(door.x);
+        const dy = Math.floor(door.y);
         ctx.fillStyle = '#ff0055';
-        ctx.fillRect((door.x - 8) | 0, (door.y - 8) | 0, 16, 16);
+        ctx.fillRect(dx - 8, dy - 8, 16, 16);
         ctx.fillStyle = '#ffffff';
-        ctx.fillRect((door.x - 4) | 0, (door.y - 4) | 0, 8, 8);
+        ctx.fillRect(dx - 4, dy - 4, 8, 8);
       }
     }
   }
@@ -1024,8 +1040,8 @@
     addShake(amount) { this.intensity = Math.min(18, this.intensity + amount); }
     update(dt) {
       if (this.intensity > 0.1) {
-        this.offsetX = (Math.random() - 0.5) * this.intensity;
-        this.offsetY = (Math.random() - 0.5) * this.intensity;
+        this.offsetX = Math.floor((Math.random() - 0.5) * this.intensity);
+        this.offsetY = Math.floor((Math.random() - 0.5) * this.intensity);
         this.intensity *= Math.pow(0.86, dt);
       } else { this.intensity = 0; this.offsetX = 0; this.offsetY = 0; }
     }
@@ -1034,7 +1050,7 @@
   class ParticleSystem {
     constructor() { this.particles = []; }
     addParticle(x, y, vx, vy, color, size, life) {
-      this.particles.push({ x, y, vx, vy, color, size, life, maxLife: life });
+      this.particles.push({ x, y, vx, vy, color, size: Math.floor(size), life, maxLife: life });
       if (this.particles.length > 250) fastRemove(this.particles, 0);
     }
     update(dt) {
@@ -1049,9 +1065,12 @@
     draw(ctx) {
       for (let i = 0; i < this.particles.length; i++) {
         const p = this.particles[i];
+        const px = Math.floor(p.x);
+        const py = Math.floor(p.y);
+        const psz = Math.floor(p.size);
         ctx.fillStyle = p.color;
         ctx.globalAlpha = Math.max(0, p.life / p.maxLife);
-        ctx.fillRect((p.x - p.size / 2) | 0, (p.y - p.size / 2) | 0, p.size, p.size);
+        ctx.fillRect(px - (psz >> 1), py - (psz >> 1), psz, psz);
       }
       ctx.globalAlpha = 1.0;
     }
@@ -1098,13 +1117,15 @@
       ctx.globalCompositeOperation = 'screen';
       for (let i = 0; i < lights.length; i++) {
         const l = lights[i];
-        const rad = l.radius || 16;
-        const grad = ctx.createRadialGradient(l.x, l.y, 0, l.x, l.y, rad);
+        const rad = Math.floor(l.radius || 16);
+        const lx = Math.floor(l.x);
+        const ly = Math.floor(l.y);
+        const grad = ctx.createRadialGradient(lx, ly, 0, lx, ly, rad);
         grad.addColorStop(0, l.color);
         grad.addColorStop(1, 'rgba(0,0,0,0)');
         ctx.fillStyle = grad;
         ctx.beginPath();
-        ctx.arc(l.x, l.y, rad, 0, Math.PI * 2);
+        ctx.arc(lx, ly, rad, 0, Math.PI * 2);
         ctx.fill();
       }
       ctx.restore();
@@ -1129,7 +1150,7 @@
       screenCtx.save();
       screenCtx.clearRect(0, 0, mainWidth, mainHeight);
       screenCtx.imageSmoothingEnabled = false;
-      if (screenShake) screenCtx.translate(screenShake.offsetX, screenShake.offsetY);
+      if (screenShake) screenCtx.translate(Math.floor(screenShake.offsetX), Math.floor(screenShake.offsetY));
       screenCtx.drawImage(this.offscreenCanvas, 0, 0, this.width, this.height, 0, 0, mainWidth, mainHeight);
       screenCtx.restore();
     }
@@ -1437,8 +1458,8 @@
         offCtx.strokeStyle = 'rgba(0, 240, 255, 0.35)';
         offCtx.lineWidth = 1;
         offCtx.beginPath();
-        offCtx.moveTo((this.player.x) | 0, (this.player.y) | 0);
-        offCtx.lineTo((this.mousePos.x) | 0, (this.mousePos.y) | 0);
+        offCtx.moveTo(Math.floor(this.player.x), Math.floor(this.player.y));
+        offCtx.lineTo(Math.floor(this.mousePos.x), Math.floor(this.mousePos.y));
         offCtx.stroke();
       }
 
@@ -1453,26 +1474,26 @@
       this.popupManager.draw(offCtx);
 
       const lights = [];
-      if (this.player) lights.push({ x: this.player.x, y: this.player.y, radius: 24, color: 'rgba(0, 240, 255, 0.25)' });
+      if (this.player) lights.push({ x: Math.floor(this.player.x), y: Math.floor(this.player.y), radius: 24, color: 'rgba(0, 240, 255, 0.25)' });
       if (this.crateManager && this.crateManager.activeCrate) {
         const c = this.crateManager.activeCrate;
-        lights.push({ x: c.x, y: c.y, radius: 22, color: c.isGolden ? 'rgba(255, 183, 0, 0.45)' : 'rgba(0, 240, 255, 0.3)' });
+        lights.push({ x: Math.floor(c.x), y: Math.floor(c.y), radius: 22, color: c.isGolden ? 'rgba(255, 183, 0, 0.45)' : 'rgba(0, 240, 255, 0.3)' });
       }
       for (let i = 0; i < this.bullets.length; i++) {
         const b = this.bullets[i];
-        lights.push({ x: b.x, y: b.y, radius: 10, color: 'rgba(255, 255, 255, 0.2)' });
+        lights.push({ x: Math.floor(b.x), y: Math.floor(b.y), radius: 10, color: 'rgba(255, 255, 255, 0.2)' });
       }
       for (let i = 0; i < this.enemyBullets.length; i++) {
         const eb = this.enemyBullets[i];
-        lights.push({ x: eb.x, y: eb.y, radius: 12, color: 'rgba(255, 0, 85, 0.35)' });
+        lights.push({ x: Math.floor(eb.x), y: Math.floor(eb.y), radius: 12, color: 'rgba(255, 0, 85, 0.35)' });
       }
       this.renderer.drawDynamicLighting(lights);
 
       if (this.state === GAME_STATES.PLAYING) {
         offCtx.strokeStyle = '#00f0ff';
         offCtx.lineWidth = 1;
-        const cx = (this.mousePos.x) | 0;
-        const cy = (this.mousePos.y) | 0;
+        const cx = Math.floor(this.mousePos.x);
+        const cy = Math.floor(this.mousePos.y);
         offCtx.strokeRect(cx - 3, cy - 3, 6, 6);
       }
 
