@@ -18,7 +18,6 @@ export class Player {
     this.maxHp = 100;
     this.invulnerableTimer = 0;
     this.comboMultiplier = 1;
-    this.comboTimer = 0;
 
     this.isDashing = false;
     this.dashTimer = 0;
@@ -48,9 +47,9 @@ export class Player {
     return true;
   }
 
-  update(keys, mousePos, arenaBounds, bullets, particles, screenShake) {
-    if (this.invulnerableTimer > 0) this.invulnerableTimer--;
-    if (this.dashCooldown > 0) this.dashCooldown--;
+  update(keys, mousePos, arenaBounds, bullets, particles, screenShake, dt = 1.0) {
+    if (this.invulnerableTimer > 0) this.invulnerableTimer -= dt;
+    if (this.dashCooldown > 0) this.dashCooldown -= dt;
 
     if (keys['Space'] || keys['ShiftLeft'] || keys['ShiftRight']) {
       if (!this.isDashing && this.dashCooldown <= 0) {
@@ -73,9 +72,9 @@ export class Player {
     }
 
     if (this.isDashing) {
-      this.x += this.dashVx;
-      this.y += this.dashVy;
-      this.dashTimer--;
+      this.x += this.dashVx * dt;
+      this.y += this.dashVy * dt;
+      this.dashTimer -= dt;
       if (this.dashTimer <= 0) {
         this.isDashing = false;
       }
@@ -96,8 +95,8 @@ export class Player {
         moveY *= 0.7071;
       }
 
-      this.x += moveX * this.speed;
-      this.y += moveY * this.speed;
+      this.x += moveX * this.speed * dt;
+      this.y += moveY * this.speed * dt;
     }
 
     const pad = this.size / 2;
