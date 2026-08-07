@@ -562,7 +562,7 @@
         c.life -= dt;
         if (c.life <= 0) fastRemove(this.casings, i);
       }
-      for (let i = this.corpses.length - 1; i >= 0; i--) {
+      for (let i = 0; i < this.corpses.length; i++) {
         const corpse = this.corpses[i];
         corpse.life -= dt;
         if (corpse.life <= 0) fastRemove(this.corpses, i);
@@ -593,17 +593,34 @@
 
   class PopupManager {
     constructor() { this.popups = []; }
+
     addPopup(x, y, text, color = '#ffffff') {
-      this.popups.push({ x: Math.floor(x), y: Math.floor(y), text, color, vy: -0.8, life: 45 });
+      this.popups.push({
+        x: Math.floor(x),
+        y: Math.floor(y),
+        stepAccumulator: 0,
+        text,
+        color,
+        life: 45
+      });
     }
+
     update(dt) {
       for (let i = this.popups.length - 1; i >= 0; i--) {
         const p = this.popups[i];
-        p.y += p.vy * dt;
+        p.stepAccumulator += 0.6 * dt;
+
+        if (p.stepAccumulator >= 1.0) {
+          const pixelsToMove = Math.floor(p.stepAccumulator);
+          p.y -= pixelsToMove;
+          p.stepAccumulator -= pixelsToMove;
+        }
+
         p.life -= dt;
         if (p.life <= 0) fastRemove(this.popups, i);
       }
     }
+
     draw(ctx) {
       ctx.font = '8px "Press Start 2P"';
       ctx.textAlign = 'center';
@@ -611,6 +628,7 @@
         const p = this.popups[i];
         const px = Math.floor(p.x);
         const py = Math.floor(p.y);
+
         ctx.fillStyle = '#000000';
         ctx.fillText(p.text, px + 1, py + 1);
         ctx.fillStyle = p.color;
