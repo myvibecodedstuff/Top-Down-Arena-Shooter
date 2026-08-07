@@ -65,12 +65,6 @@ class Game {
     window.addEventListener('keydown', (e) => {
       this.keys[e.code] = true;
 
-        if ((this.state === 'TITLE' || this.state === 'GAMEOVER' || (typeof GAME_STATES !== 'undefined' && (this.state === GAME_STATES.TITLE || this.state === GAME_STATES.GAMEOVER))) && (e.code === 'Space' || e.code === 'Enter')) {
-          this.startGame();
-        }
-        if (e.code === 'KeyQ' && window.parent !== window) window.parent.postMessage('NAV_PREV', '*');
-        if (e.code === 'KeyE' && window.parent !== window) window.parent.postMessage('NAV_NEXT', '*');
-
       if (e.code === 'KeyP' && this.state === GAME_STATES.PLAYING) {
         this.togglePause();
       }
