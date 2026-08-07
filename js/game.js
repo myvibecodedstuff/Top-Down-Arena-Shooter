@@ -45,32 +45,53 @@
   };
 
   let activePaletteName = 'CYBERPUNK';
+  const colorCache = new Map();
 
   function setActivePalette(name) {
-    if (PALETTES[name]) activePaletteName = name;
+    if (PALETTES[name]) {
+      activePaletteName = name;
+      colorCache.clear();
+    }
   }
 
-  function quantizeColor(r, g, b, x, y, paletteName = activePaletteName, ditherStrength = 0.25) {
-    const palette = PALETTES[paletteName].colors;
-    const ditherValue = BAYER_4X4[y % 4][x % 4] - 0.5;
+  function quantizeColorFast(r, g, b, x, y, paletteName = activePaletteName, ditherStrength = 0.22) {
+    const ditherValue = BAYER_4X4[y & 3][x & 3] - 0.5;
     const offset = ditherValue * ditherStrength * 255;
 
-    const dr = Math.min(255, Math.max(0, r + offset));
-    const dg = Math.min(255, Math.max(0, g + offset));
-    const db = Math.min(255, Math.max(0, b + offset));
+    const dr = (r + offset + 0.5) | 0;
+    const dg = (g + offset + 0.5) | 0;
+    const db = (b + offset + 0.5) | 0;
 
+    const cr = dr < 0 ? 0 : (dr > 255 ? 255 : dr);
+    const cg = dg < 0 ? 0 : (dg > 255 ? 255 : dg);
+    const cb = db < 0 ? 0 : (db > 255 ? 255 : db);
+
+    const key = (cr << 16) | (cg << 8) | cb;
+    let cached = colorCache.get(key);
+    if (cached) return cached;
+
+    const palette = PALETTES[paletteName].colors;
     let closest = palette[0];
-    let minDistance = Infinity;
+    let minDistance = 1000000;
 
     for (let i = 0; i < palette.length; i++) {
       const c = palette[i];
-      const dist = 0.3 * (dr - c[0]) ** 2 + 0.59 * (dg - c[1]) ** 2 + 0.11 * (db - c[2]) ** 2;
+      const dist = 0.3 * (cr - c[0]) * (cr - c[0]) + 0.59 * (cg - c[1]) * (cg - c[1]) + 0.11 * (cb - c[2]) * (cb - c[2]);
       if (dist < minDistance) {
         minDistance = dist;
         closest = c;
       }
     }
+
+    colorCache.set(key, closest);
     return closest;
+  }
+
+  function fastRemove(arr, index) {
+    const last = arr.pop();
+    if (index < arr.length) {
+      arr[index] = last;
+    }
   }
 
   class SoundEngine {
@@ -133,7 +154,7 @@
     playShotgun() {
       if (!this.initialized) return;
       this.resume();
-      const bufferSize = this.ctx.sampleRate * 0.18;
+      const bufferSize = (this.ctx.sampleRate * 0.18) | 0;
       const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
       const data = buffer.getChannelData(0);
       for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
@@ -195,7 +216,7 @@
     playExplosion(pitchMultiplier = 1.0) {
       if (!this.initialized) return;
       this.resume();
-      const bufferSize = this.ctx.sampleRate * 0.3;
+      const bufferSize = (this.ctx.sampleRate * 0.3) | 0;
       const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
       const data = buffer.getChannelData(0);
       for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
@@ -221,7 +242,7 @@
     playCrowdRoar() {
       if (!this.initialized) return;
       this.resume();
-      const bufferSize = this.ctx.sampleRate * 0.5;
+      const bufferSize = (this.ctx.sampleRate * 0.5) | 0;
       const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
       const data = buffer.getChannelData(0);
       for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
@@ -344,6 +365,10 @@
 
   class Bullet {
     constructor(x, y, vx, vy, weapon, isEnemy = false) {
+      this.init(x, y, vx, vy, weapon, isEnemy);
+    }
+
+    init(x, y, vx, vy, weapon, isEnemy = false) {
       this.x = x; this.y = y; this.vx = vx; this.vy = vy;
       this.weapon = weapon;
       this.color = isEnemy ? '#ff0033' : weapon.color;
@@ -361,7 +386,8 @@
       if (this.weapon.homing && enemies && enemies.length > 0 && !this.isEnemy) {
         let closest = null;
         let minDist = 160;
-        for (let e of enemies) {
+        for (let i = 0; i < enemies.length; i++) {
+          const e = enemies[i];
           const d = Math.hypot(e.x - this.x, e.y - this.y);
           if (d < minDist) { minDist = d; closest = e; }
         }
@@ -393,14 +419,14 @@
         } else this.dead = true;
       }
 
-      if (Math.random() < 0.4 && particles) {
+      if (Math.random() < 0.35 && particles) {
         particles.addParticle(this.x, this.y, (Math.random() - 0.5) * 0.5, (Math.random() - 0.5) * 0.5, this.color, 2, 10);
       }
     }
 
     draw(ctx) {
       ctx.fillStyle = this.color;
-      ctx.fillRect(Math.round(this.x - this.size / 2), Math.round(this.y - this.size / 2), this.size, this.size);
+      ctx.fillRect((this.x - this.size / 2) | 0, (this.y - this.size / 2) | 0, this.size, this.size);
     }
   }
 
@@ -428,7 +454,7 @@
       };
     }
 
-    update(player, particles, uiManager, dt, popups, hitFreeze) {
+    update(player, particles, uiManager, dt, popups, triggerSlowMo) {
       if (!this.activeCrate) { this.spawnCrate(); return; }
 
       const crate = this.activeCrate;
@@ -443,13 +469,14 @@
       if (dist < (player.size + crate.size) * 0.7) {
         this.cratesCollected++;
         soundEngine.playCratePickup();
-        if (hitFreeze) hitFreeze(35);
+
+        if (triggerSlowMo) triggerSlowMo(35);
 
         const weaponKeys = Object.keys(WEAPONS);
-        let newKey = weaponKeys[Math.floor(Math.random() * weaponKeys.length)];
+        let newKey = weaponKeys[(Math.random() * weaponKeys.length) | 0];
         if (weaponKeys.length > 1 && WEAPONS[newKey].id === player.currentWeapon.id) {
           const remaining = weaponKeys.filter(k => WEAPONS[k].id !== player.currentWeapon.id);
-          newKey = remaining[Math.floor(Math.random() * remaining.length)];
+          newKey = remaining[(Math.random() * remaining.length) | 0];
         }
 
         const newWeapon = WEAPONS[newKey];
@@ -469,8 +496,8 @@
 
         if (particles) {
           const pColor = crate.isGolden ? '#ffe600' : '#00f0ff';
-          for (let i = 0; i < 35; i++) {
-            const angle = (Math.PI * 2 * i) / 35;
+          for (let i = 0; i < 30; i++) {
+            const angle = (Math.PI * 2 * i) / 30;
             const spd = 2 + Math.random() * 4.0;
             particles.addParticle(crate.x, crate.y, Math.cos(angle) * spd, Math.sin(angle) * spd, pColor, 3, 25);
           }
@@ -491,26 +518,26 @@
       const half = c.size / 2;
 
       ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
-      ctx.fillRect(Math.round(c.x - half), Math.round(c.y + half - 2), c.size, 4);
+      ctx.fillRect((c.x - half) | 0, (c.y + half - 2) | 0, c.size, 4);
 
       ctx.fillStyle = c.isGolden ? '#ffe600' : '#ff9900';
-      ctx.fillRect(Math.round(c.x - half), Math.round(drawY - half), c.size, c.size);
+      ctx.fillRect((c.x - half) | 0, (drawY - half) | 0, c.size, c.size);
 
       ctx.strokeStyle = '#ffffff';
       ctx.lineWidth = 1;
-      ctx.strokeRect(Math.round(c.x - half) + 0.5, Math.round(drawY - half) + 0.5, c.size - 1, c.size - 1);
+      ctx.strokeRect(((c.x - half) | 0) + 0.5, ((drawY - half) | 0) + 0.5, c.size - 1, c.size - 1);
 
       ctx.fillStyle = '#ffffff';
       ctx.font = '8px "Press Start 2P"';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(c.isGolden ? '★' : '?', Math.round(c.x), Math.round(drawY + 1));
+      ctx.fillText(c.isGolden ? '★' : '?', (c.x) | 0, (drawY + 1) | 0);
 
       const ringPct = Math.max(0, c.timerRing / c.maxTimerRing);
       ctx.strokeStyle = c.isGolden ? '#ffe600' : '#00f0ff';
       ctx.lineWidth = 1.5;
       ctx.beginPath();
-      ctx.arc(Math.round(c.x), Math.round(drawY), 12, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * ringPct);
+      ctx.arc((c.x) | 0, (drawY) | 0, 12, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * ringPct);
       ctx.stroke();
     }
   }
@@ -539,7 +566,6 @@
         x, y,
         size: size || 8,
         color,
-        rot: Math.random() * Math.PI * 2,
         life: 360
       });
       if (this.corpses.length > 300) this.corpses.shift();
@@ -553,12 +579,12 @@
         c.vx *= Math.pow(0.85, dt);
         c.vy *= Math.pow(0.85, dt);
         c.life -= dt;
-        if (c.life <= 0) this.casings.splice(i, 1);
+        if (c.life <= 0) fastRemove(this.casings, i);
       }
       for (let i = this.corpses.length - 1; i >= 0; i--) {
         const corpse = this.corpses[i];
         corpse.life -= dt;
-        if (corpse.life <= 0) this.corpses.splice(i, 1);
+        if (corpse.life <= 0) fastRemove(this.corpses, i);
       }
     }
 
@@ -567,7 +593,7 @@
         const corpse = this.corpses[i];
         ctx.fillStyle = corpse.color;
         ctx.globalAlpha = Math.max(0, corpse.life / 360) * 0.75;
-        ctx.fillRect(Math.round(corpse.x - corpse.size / 2), Math.round(corpse.y - corpse.size / 2), corpse.size, corpse.size - 2);
+        ctx.fillRect((corpse.x - corpse.size / 2) | 0, (corpse.y - corpse.size / 2) | 0, corpse.size, corpse.size - 2);
       }
       ctx.globalAlpha = 1.0;
 
@@ -575,7 +601,7 @@
         const c = this.casings[i];
         ctx.fillStyle = c.color;
         ctx.globalAlpha = Math.max(0, c.life / 240);
-        ctx.fillRect(Math.round(c.x), Math.round(c.y), 2, 1);
+        ctx.fillRect((c.x) | 0, (c.y) | 0, 2, 1);
       }
       ctx.globalAlpha = 1.0;
     }
@@ -591,17 +617,20 @@
         const p = this.popups[i];
         p.y += p.vy * dt;
         p.life -= dt;
-        if (p.life <= 0) this.popups.splice(i, 1);
+        if (p.life <= 0) fastRemove(this.popups, i);
       }
     }
     draw(ctx) {
       ctx.font = '8px "Press Start 2P"';
       ctx.textAlign = 'center';
-      for (let p of this.popups) {
+      for (let i = 0; i < this.popups.length; i++) {
+        const p = this.popups[i];
+        const px = (p.x) | 0;
+        const py = (p.y) | 0;
         ctx.fillStyle = '#000000';
-        ctx.fillText(p.text, Math.round(p.x) + 1, Math.round(p.y) + 1);
+        ctx.fillText(p.text, px + 1, py + 1);
         ctx.fillStyle = p.color;
-        ctx.fillText(p.text, Math.round(p.x), Math.round(p.y));
+        ctx.fillText(p.text, px, py);
       }
     }
   }
@@ -750,24 +779,24 @@
     }
 
     draw(ctx) {
-      if (this.invulnerableTimer > 0 && Math.floor(this.invulnerableTimer / 3) % 2 === 0) return;
+      if (this.invulnerableTimer > 0 && (((this.invulnerableTimer / 3) | 0) % 2 === 0)) return;
 
       const half = this.size / 2;
       ctx.fillStyle = this.isDashing ? '#00f0ff' : '#ffe600';
-      ctx.fillRect(Math.round(this.x - half), Math.round(this.y - half), this.size, this.size);
+      ctx.fillRect((this.x - half) | 0, (this.y - half) | 0, this.size, this.size);
 
       ctx.fillStyle = '#000000';
       const eyeX = this.x + Math.cos(this.aimAngle) * 3;
       const eyeY = this.y + Math.sin(this.aimAngle) * 3;
-      ctx.fillRect(Math.round(eyeX - 1.5), Math.round(eyeY - 1.5), 3, 3);
+      ctx.fillRect((eyeX - 1.5) | 0, (eyeY - 1.5) | 0, 3, 3);
 
       ctx.strokeStyle = this.currentWeapon.color;
       ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.moveTo(Math.round(this.x), Math.round(this.y));
+      ctx.moveTo((this.x) | 0, (this.y) | 0);
       ctx.lineTo(
-        Math.round(this.x + Math.cos(this.aimAngle) * 10),
-        Math.round(this.y + Math.sin(this.aimAngle) * 10)
+        (this.x + Math.cos(this.aimAngle) * 10) | 0,
+        (this.y + Math.sin(this.aimAngle) * 10) | 0
       );
       ctx.stroke();
     }
@@ -830,7 +859,7 @@
         }
 
         if (particles) {
-          for (let i = 0; i < 22; i++) {
+          for (let i = 0; i < 20; i++) {
             const ang = Math.random() * Math.PI * 2;
             const spd = 1 + Math.random() * 4.0;
             particles.addParticle(this.x, this.y, Math.cos(ang) * spd, Math.sin(ang) * spd, this.color, 3, 28);
@@ -839,17 +868,19 @@
       }
     }
 
-    update(player, arenaBounds, enemyBullets, particles, dt) {
+    update(player, arenaBounds, enemyBullets, particles, dt, slowMoFactor = 1.0) {
       if (this.flashTimer > 0) this.flashTimer -= dt;
       this.squishX += (1 - this.squishX) * 0.2;
       this.squishY += (1 - this.squishY) * 0.2;
 
-      this.x += this.vx * dt;
-      this.y += this.vy * dt;
-      this.vx *= Math.pow(0.82, dt);
-      this.vy *= Math.pow(0.82, dt);
+      const effectiveDt = dt * slowMoFactor;
 
-      this.age += dt;
+      this.x += this.vx * effectiveDt;
+      this.y += this.vy * effectiveDt;
+      this.vx *= Math.pow(0.82, effectiveDt);
+      this.vy *= Math.pow(0.82, effectiveDt);
+
+      this.age += effectiveDt;
       if (!this.isEnraged && this.age > 450) {
         this.isEnraged = true;
         this.speed *= 2.2;
@@ -862,32 +893,32 @@
 
       switch (this.type.behavior) {
         case 'chase':
-          this.x += (dx / dist) * this.speed * dt;
-          this.y += (dy / dist) * this.speed * dt;
+          this.x += (dx / dist) * this.speed * effectiveDt;
+          this.y += (dy / dist) * this.speed * effectiveDt;
           break;
 
         case 'charge':
           if (!this.isCharging) {
-            this.chargeTimer += dt;
-            this.x += (dx / dist) * this.speed * dt;
-            this.y += (dy / dist) * this.speed * dt;
+            this.chargeTimer += effectiveDt;
+            this.x += (dx / dist) * this.speed * effectiveDt;
+            this.y += (dy / dist) * this.speed * effectiveDt;
             if (this.chargeTimer > 90 && dist < 140) {
               this.isCharging = true;
               this.chargeDirX = dx / dist; this.chargeDirY = dy / dist;
               this.chargeTimer = 0;
             }
           } else {
-            this.x += this.chargeDirX * this.type.chargeSpeed * dt;
-            this.y += this.chargeDirY * this.type.chargeSpeed * dt;
-            this.chargeTimer += dt;
+            this.x += this.chargeDirX * this.type.chargeSpeed * effectiveDt;
+            this.y += this.chargeDirY * this.type.chargeSpeed * effectiveDt;
+            this.chargeTimer += effectiveDt;
             if (this.chargeTimer > 35) { this.isCharging = false; this.chargeTimer = 0; }
           }
           break;
 
         case 'shoot':
-          this.x += (dx / dist) * this.speed * dt;
-          this.y += (dy / dist) * this.speed * dt;
-          this.shootTimer += dt;
+          this.x += (dx / dist) * this.speed * effectiveDt;
+          this.y += (dy / dist) * this.speed * effectiveDt;
+          this.shootTimer += effectiveDt;
           if (this.shootTimer > 90) {
             this.shootTimer = 0;
             if (enemyBullets) {
@@ -898,9 +929,9 @@
 
         case 'heavy':
         case 'boss':
-          this.x += (dx / dist) * this.speed * dt;
-          this.y += (dy / dist) * this.speed * dt;
-          this.shootTimer += dt;
+          this.x += (dx / dist) * this.speed * effectiveDt;
+          this.y += (dy / dist) * this.speed * effectiveDt;
+          this.shootTimer += effectiveDt;
           if (this.shootTimer > (this.type.behavior === 'boss' ? 45 : 120)) {
             this.shootTimer = 0;
             if (enemyBullets) {
@@ -924,10 +955,10 @@
       const h = this.size * this.squishY;
 
       ctx.fillStyle = this.flashTimer > 0 ? '#ffffff' : (this.isEnraged ? '#ff0000' : this.color);
-      ctx.fillRect(Math.round(this.x - w / 2), Math.round(this.y - h / 2), w, h);
+      ctx.fillRect((this.x - w / 2) | 0, (this.y - h / 2) | 0, w | 0, h | 0);
       ctx.strokeStyle = '#000000';
       ctx.lineWidth = 1;
-      ctx.strokeRect(Math.round(this.x - w / 2) + 0.5, Math.round(this.y - h / 2) + 0.5, w - 1, h - 1);
+      ctx.strokeRect(((this.x - w / 2) | 0) + 0.5, ((this.y - h / 2) | 0) + 0.5, (w - 1) | 0, (h - 1) | 0);
     }
   }
 
@@ -965,8 +996,8 @@
       if (this.enemiesRemainingInWave > 0 && this.spawnTimer >= Math.max(12, 40 - this.waveNumber * 3)) {
         this.spawnTimer = 0;
 
-        const spawnClusterCount = Math.min(this.enemiesRemainingInWave, 2 + Math.floor(this.waveNumber / 2));
-        const door = this.spawnerDoors[Math.floor(Math.random() * this.spawnerDoors.length)];
+        const spawnClusterCount = Math.min(this.enemiesRemainingInWave, 2 + ((this.waveNumber / 2) | 0));
+        const door = this.spawnerDoors[(Math.random() * this.spawnerDoors.length) | 0];
 
         for (let c = 0; c < spawnClusterCount; c++) {
           let type = ENEMY_TYPES.SWARMER;
@@ -984,7 +1015,7 @@
         }
 
         if (particles) {
-          for (let i = 0; i < 10; i++) {
+          for (let i = 0; i < 8; i++) {
             particles.addParticle(door.x, door.y, (Math.random() - 0.5) * 2.5, (Math.random() - 0.5) * 2.5, '#ff0055', 2, 15);
           }
         }
@@ -1003,12 +1034,13 @@
     }
 
     drawDoors(ctx) {
-      this.spawnerDoors.forEach(door => {
+      for (let i = 0; i < this.spawnerDoors.length; i++) {
+        const door = this.spawnerDoors[i];
         ctx.fillStyle = '#ff0055';
-        ctx.fillRect(Math.round(door.x - 8), Math.round(door.y - 8), 16, 16);
+        ctx.fillRect((door.x - 8) | 0, (door.y - 8) | 0, 16, 16);
         ctx.fillStyle = '#ffffff';
-        ctx.fillRect(Math.round(door.x - 4), Math.round(door.y - 4), 8, 8);
-      });
+        ctx.fillRect((door.x - 4) | 0, (door.y - 4) | 0, 8, 8);
+      }
     }
   }
 
@@ -1028,6 +1060,7 @@
     constructor() { this.particles = []; }
     addParticle(x, y, vx, vy, color, size, life) {
       this.particles.push({ x, y, vx, vy, color, size, life, maxLife: life });
+      if (this.particles.length > 250) fastRemove(this.particles, 0);
     }
     update(dt) {
       for (let i = this.particles.length - 1; i >= 0; i--) {
@@ -1035,7 +1068,7 @@
         p.x += p.vx * dt; p.y += p.vy * dt;
         p.vx *= Math.pow(0.95, dt); p.vy *= Math.pow(0.95, dt);
         p.life -= dt;
-        if (p.life <= 0) this.particles.splice(i, 1);
+        if (p.life <= 0) fastRemove(this.particles, i);
       }
     }
     draw(ctx) {
@@ -1043,7 +1076,7 @@
         const p = this.particles[i];
         ctx.fillStyle = p.color;
         ctx.globalAlpha = Math.max(0, p.life / p.maxLife);
-        ctx.fillRect(Math.round(p.x - p.size / 2), Math.round(p.y - p.size / 2), p.size, p.size);
+        ctx.fillRect((p.x - p.size / 2) | 0, (p.y - p.size / 2) | 0, p.size, p.size);
       }
       ctx.globalAlpha = 1.0;
     }
@@ -1109,8 +1142,8 @@
 
       for (let y = 0; y < this.height; y++) {
         for (let x = 0; x < this.width; x++) {
-          const idx = (y * this.width + x) * 4;
-          const quantized = quantizeColor(data[idx], data[idx + 1], data[idx + 2], x, y, activePaletteName, 0.25);
+          const idx = (y * this.width + x) << 2;
+          const quantized = quantizeColorFast(data[idx], data[idx + 1], data[idx + 2], x, y, activePaletteName, 0.22);
           data[idx] = quantized[0]; data[idx + 1] = quantized[1]; data[idx + 2] = quantized[2];
         }
       }
@@ -1199,7 +1232,7 @@
       this.mousePos = { x: 180, y: 120, isDown: false };
 
       this.lastTime = performance.now();
-      this.freezeFrames = 0;
+      this.slowMoFrames = 0;
 
       this.bindEvents();
       this.setupUI();
@@ -1209,8 +1242,8 @@
       requestAnimationFrame((time) => this.loop(time));
     }
 
-    triggerHitFreeze(frames = 3) {
-      this.freezeFrames = Math.max(this.freezeFrames, frames);
+    triggerSlowMo(frames = 35) {
+      this.slowMoFrames = Math.max(this.slowMoFrames, frames);
     }
 
     resizeCanvas() {
@@ -1284,13 +1317,14 @@
       this.player = new Player(180, 120);
       this.crateManager = new CrateManager(this.arenaBounds);
       this.waveManager = new WaveManager(this.arenaBounds);
-      this.bullets = [];
-      this.enemyBullets = [];
-      this.enemies = [];
+      this.bullets.length = 0;
+      this.enemyBullets.length = 0;
+      this.enemies.length = 0;
       this.particles = new ParticleSystem();
       this.debrisManager = new DebrisManager();
       this.popupManager = new PopupManager();
       this.uiManager.resetScore();
+      this.slowMoFrames = 0;
 
       document.getElementById('screen-title')?.classList.add('hidden');
       document.getElementById('screen-gameover')?.classList.add('hidden');
@@ -1325,9 +1359,10 @@
     update(dt) {
       if (this.state !== GAME_STATES.PLAYING) return;
 
-      if (this.freezeFrames > 0) {
-        this.freezeFrames -= dt;
-        return;
+      let enemySlowMoFactor = 1.0;
+      if (this.slowMoFrames > 0) {
+        this.slowMoFrames -= dt;
+        enemySlowMoFactor = 0.3;
       }
 
       this.screenShake.update(dt);
@@ -1338,7 +1373,7 @@
       this.player.update(this.keys, this.mousePos, this.arenaBounds, this.bullets, this.particles, this.screenShake, dt, this.debrisManager);
       if (this.player.hp <= 0) { this.gameOver(); return; }
 
-      this.crateManager.update(this.player, this.particles, this.uiManager, dt, this.popupManager, (f) => this.triggerHitFreeze(f));
+      this.crateManager.update(this.player, this.particles, this.uiManager, dt, this.popupManager, (f) => this.triggerSlowMo(f));
       this.waveManager.update(this.enemies, this.player, this.enemyBullets, this.particles, this.uiManager, dt);
 
       for (let i = this.bullets.length - 1; i >= 0; i--) {
@@ -1367,10 +1402,9 @@
             if (!b.piercing) b.dead = true;
 
             if (e.dead) {
-              this.triggerHitFreeze(2);
               this.player.killStreak++;
               this.player.comboTimer = 120;
-              this.player.comboMultiplier = Math.min(5, 1 + Math.floor(this.player.killStreak / 4));
+              this.player.comboMultiplier = Math.min(5, 1 + ((this.player.killStreak / 4) | 0));
 
               const addedScore = e.type.scoreValue * this.player.comboMultiplier;
               this.uiManager.addScore(addedScore);
@@ -1382,12 +1416,12 @@
                 this.uiManager.showBanner(`RAMPAGE! ${this.player.comboMultiplier}X MULTIPLIER!`, 1200);
               }
 
-              this.enemies.splice(j, 1);
+              fastRemove(this.enemies, j);
             }
             break;
           }
         }
-        if (b.dead) this.bullets.splice(i, 1);
+        if (b.dead) fastRemove(this.bullets, i);
       }
 
       for (let i = this.enemyBullets.length - 1; i >= 0; i--) {
@@ -1397,23 +1431,21 @@
         const dist = Math.hypot(eb.x - this.player.x, eb.y - this.player.y);
         if (dist < (eb.size + this.player.size) * 0.6) {
           if (this.player.takeDamage(eb.damage, this.particles)) {
-            this.triggerHitFreeze(4);
             this.screenShake.addShake(6);
             soundEngine.playExplosion();
           }
           eb.dead = true;
         }
-        if (eb.dead) this.enemyBullets.splice(i, 1);
+        if (eb.dead) fastRemove(this.enemyBullets, i);
       }
 
       for (let i = 0; i < this.enemies.length; i++) {
         const e = this.enemies[i];
-        e.update(this.player, this.arenaBounds, this.enemyBullets, this.particles, dt);
+        e.update(this.player, this.arenaBounds, this.enemyBullets, this.particles, dt, enemySlowMoFactor);
 
         const dist = Math.hypot(e.x - this.player.x, e.y - this.player.y);
         if (dist < (e.size + this.player.size) * 0.6) {
           if (this.player.takeDamage(15, this.particles)) {
-            this.triggerHitFreeze(5);
             this.screenShake.addShake(8);
             soundEngine.playExplosion();
           }
@@ -1438,8 +1470,8 @@
         offCtx.strokeStyle = 'rgba(255, 0, 85, 0.25)';
         offCtx.lineWidth = 1;
         offCtx.beginPath();
-        offCtx.moveTo(Math.round(this.player.x), Math.round(this.player.y));
-        offCtx.lineTo(Math.round(this.mousePos.x), Math.round(this.mousePos.y));
+        offCtx.moveTo((this.player.x) | 0, (this.player.y) | 0);
+        offCtx.lineTo((this.mousePos.x) | 0, (this.mousePos.y) | 0);
         offCtx.stroke();
       }
 
@@ -1459,15 +1491,21 @@
         const c = this.crateManager.activeCrate;
         lights.push({ x: c.x, y: c.y, radius: 22, color: c.isGolden ? 'rgba(255, 230, 0, 0.4)' : 'rgba(0, 240, 255, 0.3)' });
       }
-      for (let b of this.bullets) lights.push({ x: b.x, y: b.y, radius: 10, color: 'rgba(255, 255, 255, 0.2)' });
-      for (let eb of this.enemyBullets) lights.push({ x: eb.x, y: eb.y, radius: 12, color: 'rgba(255, 0, 85, 0.35)' });
+      for (let i = 0; i < this.bullets.length; i++) {
+        const b = this.bullets[i];
+        lights.push({ x: b.x, y: b.y, radius: 10, color: 'rgba(255, 255, 255, 0.2)' });
+      }
+      for (let i = 0; i < this.enemyBullets.length; i++) {
+        const eb = this.enemyBullets[i];
+        lights.push({ x: eb.x, y: eb.y, radius: 12, color: 'rgba(255, 0, 85, 0.35)' });
+      }
       this.renderer.drawDynamicLighting(lights);
 
       if (this.state === GAME_STATES.PLAYING) {
         offCtx.strokeStyle = '#00f0ff';
         offCtx.lineWidth = 1;
-        const cx = Math.round(this.mousePos.x);
-        const cy = Math.round(this.mousePos.y);
+        const cx = (this.mousePos.x) | 0;
+        const cy = (this.mousePos.y) | 0;
         offCtx.strokeRect(cx - 3, cy - 3, 6, 6);
       }
 
