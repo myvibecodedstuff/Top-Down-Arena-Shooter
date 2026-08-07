@@ -300,44 +300,44 @@
   const WEAPONS = {
     PISTOL: {
       id: 'PISTOL', name: 'DUAL PISTOLS', color: '#00f0ff',
-      fireRate: 130, spread: 0.08, speed: 10, damage: 18,
+      fireRate: 110, spread: 0.08, speed: 10, damage: 15,
       bulletsPerShot: 1, size: 3, recoil: 1.5,
       sound: () => soundEngine.playPistol()
     },
     SHOTGUN: {
       id: 'SHOTGUN', name: 'HEAVY SHOTGUN', color: '#ffe600',
-      fireRate: 340, spread: 0.38, speed: 8.5, damage: 16,
-      bulletsPerShot: 8, size: 2.5, recoil: 6,
+      fireRate: 320, spread: 0.42, speed: 8.5, damage: 16,
+      bulletsPerShot: 10, size: 2.5, recoil: 7, knockback: 4.5,
       sound: () => soundEngine.playShotgun()
     },
     PLASMA: {
       id: 'PLASMA', name: 'PLASMA RIFLE', color: '#ff0055',
-      fireRate: 75, spread: 0.12, speed: 12, damage: 13,
-      bulletsPerShot: 1, size: 4, recoil: 1,
+      fireRate: 65, spread: 0.12, speed: 12, damage: 14,
+      bulletsPerShot: 1, size: 4, recoil: 1, piercing: true,
       sound: () => soundEngine.playLaser()
     },
     RAILGUN: {
       id: 'RAILGUN', name: 'HYPER RAILGUN', color: '#00ff66',
-      fireRate: 450, spread: 0.01, speed: 20, damage: 90,
-      bulletsPerShot: 1, size: 4, recoil: 8, piercing: true,
+      fireRate: 400, spread: 0.01, speed: 22, damage: 100,
+      bulletsPerShot: 1, size: 4, recoil: 9, piercing: true, knockback: 6,
       sound: () => soundEngine.playLaser()
     },
     SAWBLADE: {
       id: 'SAWBLADE', name: 'BOUNCING SAW', color: '#a855f7',
-      fireRate: 280, spread: 0.1, speed: 7, damage: 40,
-      bulletsPerShot: 1, size: 6, bouncing: true, bouncesLeft: 5, recoil: 3,
+      fireRate: 250, spread: 0.1, speed: 7.5, damage: 30,
+      bulletsPerShot: 2, size: 6, bouncing: true, bouncesLeft: 6, recoil: 3, piercing: true,
       sound: () => soundEngine.playShotgun()
     },
     MISSILE: {
       id: 'MISSILE', name: 'MICRO MISSILE', color: '#ff9900',
-      fireRate: 240, spread: 0.2, speed: 6.5, damage: 45,
-      bulletsPerShot: 2, size: 5, explosive: true, recoil: 4, homing: true,
+      fireRate: 220, spread: 0.25, speed: 7.0, damage: 50,
+      bulletsPerShot: 3, size: 5, explosive: true, recoil: 4, homing: true,
       sound: () => soundEngine.playPistol()
     },
     FLAMETHROWER: {
       id: 'FLAMETHROWER', name: 'FLAMETHROWER', color: '#ff3300',
-      fireRate: 50, spread: 0.4, speed: 5.5, damage: 8,
-      bulletsPerShot: 2, size: 5, recoil: 0.3, flame: true,
+      fireRate: 40, spread: 0.45, speed: 6.0, damage: 10,
+      bulletsPerShot: 3, size: 5, recoil: 0.3, flame: true, piercing: true,
       sound: () => soundEngine.playLaser()
     }
   };
@@ -360,7 +360,7 @@
     update(arenaBounds, particles, dt, enemies) {
       if (this.weapon.homing && enemies && enemies.length > 0 && !this.isEnemy) {
         let closest = null;
-        let minDist = 150;
+        let minDist = 160;
         for (let e of enemies) {
           const d = Math.hypot(e.x - this.x, e.y - this.y);
           if (d < minDist) { minDist = d; closest = e; }
@@ -368,7 +368,7 @@
         if (closest) {
           const targetAngle = Math.atan2(closest.y - this.y, closest.x - this.x);
           const currentAngle = Math.atan2(this.vy, this.vx);
-          const newAngle = currentAngle + (targetAngle - currentAngle) * 0.12 * dt;
+          const newAngle = currentAngle + (targetAngle - currentAngle) * 0.14 * dt;
           const spd = Math.hypot(this.vx, this.vy);
           this.vx = Math.cos(newAngle) * spd;
           this.vy = Math.sin(newAngle) * spd;
@@ -469,9 +469,9 @@
 
         if (particles) {
           const pColor = crate.isGolden ? '#ffe600' : '#00f0ff';
-          for (let i = 0; i < 28; i++) {
-            const angle = (Math.PI * 2 * i) / 28;
-            const spd = 2 + Math.random() * 3.5;
+          for (let i = 0; i < 35; i++) {
+            const angle = (Math.PI * 2 * i) / 35;
+            const spd = 2 + Math.random() * 4.0;
             particles.addParticle(crate.x, crate.y, Math.cos(angle) * spd, Math.sin(angle) * spd, pColor, 3, 25);
           }
         }
@@ -518,30 +518,31 @@
   class DebrisManager {
     constructor() {
       this.casings = [];
-      this.splatters = [];
+      this.corpses = [];
     }
 
     addCasing(x, y, angle) {
-      const ejectAngle = angle + Math.PI / 2 + (Math.random() - 0.5) * 0.4;
-      const spd = 1.5 + Math.random() * 1.5;
+      const ejectAngle = angle + Math.PI / 2 + (Math.random() - 0.5) * 0.5;
+      const spd = 1.8 + Math.random() * 2.0;
       this.casings.push({
         x, y,
         vx: Math.cos(ejectAngle) * spd,
         vy: Math.sin(ejectAngle) * spd,
-        life: 180,
+        life: 240,
         color: '#ffe600'
       });
-      if (this.casings.length > 50) this.casings.shift();
+      if (this.casings.length > 150) this.casings.shift();
     }
 
-    addSplatter(x, y, color) {
-      this.splatters.push({
+    addCorpse(x, y, color, size) {
+      this.corpses.push({
         x, y,
-        size: 3 + Math.random() * 3,
+        size: size || 8,
         color,
-        life: 240
+        rot: Math.random() * Math.PI * 2,
+        life: 360
       });
-      if (this.splatters.length > 80) this.splatters.shift();
+      if (this.corpses.length > 300) this.corpses.shift();
     }
 
     update(dt) {
@@ -554,26 +555,26 @@
         c.life -= dt;
         if (c.life <= 0) this.casings.splice(i, 1);
       }
-      for (let i = this.splatters.length - 1; i >= 0; i--) {
-        const s = this.splatters[i];
-        s.life -= dt;
-        if (s.life <= 0) this.splatters.splice(i, 1);
+      for (let i = this.corpses.length - 1; i >= 0; i--) {
+        const corpse = this.corpses[i];
+        corpse.life -= dt;
+        if (corpse.life <= 0) this.corpses.splice(i, 1);
       }
     }
 
     draw(ctx) {
-      for (let i = 0; i < this.splatters.length; i++) {
-        const s = this.splatters[i];
-        ctx.fillStyle = s.color;
-        ctx.globalAlpha = Math.max(0, s.life / 240) * 0.6;
-        ctx.fillRect(Math.round(s.x - s.size / 2), Math.round(s.y - s.size / 2), s.size, s.size);
+      for (let i = 0; i < this.corpses.length; i++) {
+        const corpse = this.corpses[i];
+        ctx.fillStyle = corpse.color;
+        ctx.globalAlpha = Math.max(0, corpse.life / 360) * 0.75;
+        ctx.fillRect(Math.round(corpse.x - corpse.size / 2), Math.round(corpse.y - corpse.size / 2), corpse.size, corpse.size - 2);
       }
       ctx.globalAlpha = 1.0;
 
       for (let i = 0; i < this.casings.length; i++) {
         const c = this.casings[i];
         ctx.fillStyle = c.color;
-        ctx.globalAlpha = Math.max(0, c.life / 180);
+        ctx.globalAlpha = Math.max(0, c.life / 240);
         ctx.fillRect(Math.round(c.x), Math.round(c.y), 2, 1);
       }
       ctx.globalAlpha = 1.0;
@@ -636,9 +637,9 @@
       this.comboTimer = 0;
 
       if (particles) {
-        for (let i = 0; i < 12; i++) {
+        for (let i = 0; i < 16; i++) {
           const ang = Math.random() * Math.PI * 2;
-          particles.addParticle(this.x, this.y, Math.cos(ang) * 2, Math.sin(ang) * 2, '#ff0033', 2.5, 20);
+          particles.addParticle(this.x, this.y, Math.cos(ang) * 2.5, Math.sin(ang) * 2.5, '#ff0033', 2.5, 20);
         }
       }
       return true;
@@ -670,7 +671,7 @@
             this.dashVy = (dy / mag) * 5.8;
             this.isDashing = true;
             this.dashTimer = 10;
-            this.dashCooldown = 40;
+            this.dashCooldown = 35;
           }
         }
       }
@@ -773,11 +774,11 @@
   }
 
   const ENEMY_TYPES = {
-    SWARMER: { name: 'SWARMER BUG', hp: 20, speed: 1.8, size: 8, color: '#ff0055', scoreValue: 50, behavior: 'chase' },
-    CHARGER: { name: 'CYBORG BULL', hp: 60, speed: 1.2, chargeSpeed: 4.5, size: 12, color: '#ff9900', scoreValue: 150, behavior: 'charge' },
-    TURRET: { name: 'ARENA TURRET', hp: 45, speed: 0.5, size: 10, color: '#a855f7', scoreValue: 200, behavior: 'shoot' },
-    TITAN: { name: 'MECHA TITAN', hp: 180, speed: 0.7, size: 16, color: '#00ff66', scoreValue: 400, behavior: 'heavy' },
-    BOSS: { name: 'BROADCAST MEGABRAIN', hp: 850, speed: 0.6, size: 26, color: '#ffe600', scoreValue: 2500, behavior: 'boss' }
+    SWARMER: { name: 'SWARMER BUG', hp: 14, speed: 1.9, size: 7, color: '#ff0055', scoreValue: 40, behavior: 'chase' },
+    CHARGER: { name: 'CYBORG BULL', hp: 50, speed: 1.3, chargeSpeed: 4.5, size: 11, color: '#ff9900', scoreValue: 120, behavior: 'charge' },
+    TURRET: { name: 'ARENA TURRET', hp: 35, speed: 0.5, size: 10, color: '#a855f7', scoreValue: 160, behavior: 'shoot' },
+    TITAN: { name: 'MECHA TITAN', hp: 140, speed: 0.7, size: 15, color: '#00ff66', scoreValue: 350, behavior: 'heavy' },
+    BOSS: { name: 'BROADCAST MEGABRAIN', hp: 700, speed: 0.6, size: 26, color: '#ffe600', scoreValue: 2000, behavior: 'boss' }
   };
 
   class Enemy {
@@ -786,42 +787,52 @@
       this.hp = type.hp; this.maxHp = type.hp;
       this.speed = type.speed; this.size = type.size; this.color = type.color;
       this.dead = false;
+
+      this.vx = 0;
+      this.vy = 0;
+
       this.chargeTimer = 0; this.isCharging = false;
       this.chargeDirX = 0; this.chargeDirY = 0;
       this.shootTimer = 0; this.flashTimer = 0;
       this.squishX = 1; this.squishY = 1;
-
       this.age = 0;
       this.isEnraged = false;
     }
 
-    takeDamage(amount, particles, screenShake, debris, popups) {
+    takeDamage(amount, particles, screenShake, debris, popups, knockbackDirX = 0, knockbackDirY = 0, knockbackMag = 0) {
       this.hp -= amount;
       this.flashTimer = 5;
-      this.squishX = 1.3; this.squishY = 0.7;
+      this.squishX = 1.4; this.squishY = 0.6;
+
+      if (knockbackMag > 0) {
+        this.vx += knockbackDirX * knockbackMag;
+        this.vy += knockbackDirY * knockbackMag;
+      }
 
       if (popups) {
         popups.addPopup(this.x, this.y - 6, `-${amount}`, '#ff0055');
       }
 
       if (particles) {
-        for (let i = 0; i < 4; i++) {
+        for (let i = 0; i < 5; i++) {
           const ang = Math.random() * Math.PI * 2;
-          particles.addParticle(this.x, this.y, Math.cos(ang) * 1.5, Math.sin(ang) * 1.5, this.color, 2, 12);
+          particles.addParticle(this.x, this.y, Math.cos(ang) * 2.0, Math.sin(ang) * 2.0, this.color, 2, 12);
         }
       }
 
       if (this.hp <= 0) {
         this.dead = true;
-        soundEngine.playExplosion(this.type.behavior === 'boss' ? 0.5 : 1.0);
-        if (screenShake) screenShake.addShake(this.type.behavior === 'boss' ? 14 : 4);
+        soundEngine.playExplosion(this.type.behavior === 'boss' ? 0.5 : 1.1);
+        if (screenShake) screenShake.addShake(this.type.behavior === 'boss' ? 14 : 3.5);
 
-        if (debris) debris.addSplatter(this.x, this.y, this.color);
+        if (debris) {
+          debris.addCorpse(this.x, this.y, this.color, this.size);
+        }
 
         if (particles) {
-          for (let i = 0; i < 20; i++) {
+          for (let i = 0; i < 22; i++) {
             const ang = Math.random() * Math.PI * 2;
-            const spd = 1 + Math.random() * 3.5;
+            const spd = 1 + Math.random() * 4.0;
             particles.addParticle(this.x, this.y, Math.cos(ang) * spd, Math.sin(ang) * spd, this.color, 3, 28);
           }
         }
@@ -833,8 +844,13 @@
       this.squishX += (1 - this.squishX) * 0.2;
       this.squishY += (1 - this.squishY) * 0.2;
 
+      this.x += this.vx * dt;
+      this.y += this.vy * dt;
+      this.vx *= Math.pow(0.82, dt);
+      this.vy *= Math.pow(0.82, dt);
+
       this.age += dt;
-      if (!this.isEnraged && this.age > 480) {
+      if (!this.isEnraged && this.age > 450) {
         this.isEnraged = true;
         this.speed *= 2.2;
         this.color = '#ff0000';
@@ -932,11 +948,12 @@
 
     startNextWave(uiManager) {
       this.waveActive = true;
-      this.enemiesRemainingInWave = 8 + this.waveNumber * 6;
+      this.enemiesRemainingInWave = 20 + this.waveNumber * 12;
+
       if (uiManager) {
         soundEngine.playAnnouncerVoice();
         soundEngine.playCrowdRoar();
-        const waveTitle = (this.waveNumber % 5 === 0) ? `WAVE ${this.waveNumber}: BOSS BATTLE!` : `WAVE ${this.waveNumber} - BEGIN!`;
+        const waveTitle = (this.waveNumber % 5 === 0) ? `WAVE ${this.waveNumber}: BOSS CARNAGE!` : `WAVE ${this.waveNumber} - MASSIVE SWARM!`;
         uiManager.showBanner(waveTitle, 2000);
       }
     }
@@ -945,23 +962,30 @@
       if (!this.waveActive) return;
       this.spawnTimer += dt;
 
-      if (this.enemiesRemainingInWave > 0 && this.spawnTimer >= Math.max(25, 70 - this.waveNumber * 4)) {
+      if (this.enemiesRemainingInWave > 0 && this.spawnTimer >= Math.max(12, 40 - this.waveNumber * 3)) {
         this.spawnTimer = 0;
+
+        const spawnClusterCount = Math.min(this.enemiesRemainingInWave, 2 + Math.floor(this.waveNumber / 2));
         const door = this.spawnerDoors[Math.floor(Math.random() * this.spawnerDoors.length)];
-        let type = ENEMY_TYPES.SWARMER;
-        const r = Math.random();
 
-        if (this.waveNumber % 5 === 0 && this.enemiesRemainingInWave === 1) type = ENEMY_TYPES.BOSS;
-        else if (this.waveNumber >= 3 && r < 0.25) type = ENEMY_TYPES.CHARGER;
-        else if (this.waveNumber >= 2 && r < 0.45) type = ENEMY_TYPES.TURRET;
-        else if (this.waveNumber >= 4 && r < 0.6) type = ENEMY_TYPES.TITAN;
+        for (let c = 0; c < spawnClusterCount; c++) {
+          let type = ENEMY_TYPES.SWARMER;
+          const r = Math.random();
 
-        enemies.push(new Enemy(door.x, door.y, type));
-        this.enemiesRemainingInWave--;
+          if (this.waveNumber % 5 === 0 && this.enemiesRemainingInWave === 1) type = ENEMY_TYPES.BOSS;
+          else if (this.waveNumber >= 3 && r < 0.25) type = ENEMY_TYPES.CHARGER;
+          else if (this.waveNumber >= 2 && r < 0.45) type = ENEMY_TYPES.TURRET;
+          else if (this.waveNumber >= 4 && r < 0.6) type = ENEMY_TYPES.TITAN;
+
+          const offsetX = (Math.random() - 0.5) * 16;
+          const offsetY = (Math.random() - 0.5) * 16;
+          enemies.push(new Enemy(door.x + offsetX, door.y + offsetY, type));
+          this.enemiesRemainingInWave--;
+        }
 
         if (particles) {
-          for (let i = 0; i < 8; i++) {
-            particles.addParticle(door.x, door.y, (Math.random() - 0.5) * 2, (Math.random() - 0.5) * 2, '#ff0055', 2, 15);
+          for (let i = 0; i < 10; i++) {
+            particles.addParticle(door.x, door.y, (Math.random() - 0.5) * 2.5, (Math.random() - 0.5) * 2.5, '#ff0055', 2, 15);
           }
         }
       }
@@ -1326,7 +1350,20 @@
           const dist = Math.hypot(b.x - e.x, b.y - e.y);
 
           if (dist < (b.size + e.size) * 0.6) {
-            e.takeDamage(b.damage, this.particles, this.screenShake, this.debrisManager, this.popupManager);
+            const kbAngle = Math.atan2(e.y - b.y, e.x - b.x);
+            const kbMag = b.weapon.knockback || 2.5;
+
+            e.takeDamage(
+              b.damage,
+              this.particles,
+              this.screenShake,
+              this.debrisManager,
+              this.popupManager,
+              Math.cos(kbAngle),
+              Math.sin(kbAngle),
+              kbMag
+            );
+
             if (!b.piercing) b.dead = true;
 
             if (e.dead) {
