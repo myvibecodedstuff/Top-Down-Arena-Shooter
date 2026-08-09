@@ -3,18 +3,115 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CRATE ARENA</title>
-  <link rel="stylesheet" href="css/style.css">
+  <title>CRATE ARENA - Cyber Arcade Edition</title>
+  <link rel="stylesheet" href="./css/style.css">
+  <link rel="icon" href="data:,">
 </head>
 <body>
-  <div id="game-container">
-    <div id="canvas-wrapper">
-      <canvas id="game-canvas"></canvas>
-      <div class="crt-overlay"></div>
+
+<div id="game-container">
+  <!-- CRT Scanline Overlay -->
+  <div class="crt-overlay"></div>
+
+  <!-- Broadcast Alert Banner -->
+  <div id="broadcast-banner">SUPER CRATE!</div>
+
+  <!-- HUD Overlay -->
+  <div id="hud">
+    <div class="top-bar">
+      <div class="stat-box">
+        <div class="brand-title">👾 ALIEN INVADER: HIVE HIDE</div>
+        <div class="stat-row">
+          <span class="label">SCORE:</span>
+          <span id="ui-score" class="value-highlight">000000</span>
+        </div>
+        <div class="stat-row">
+          <span class="label">BIOMASS:</span>
+          <span id="ui-biomass" class="value-highlight" style="color: #33ff66;">🧪 0</span>
+        </div>
+        <div class="stat-row">
+          <span class="label">TERRITORY:</span>
+          <span id="ui-territory" class="value" style="color: #00f0ff;">0% (POWER TIER 1)</span>
+        </div>
+      </div>
+
+      <div class="stat-box" style="text-align: right; align-items: flex-end;">
+        <div class="stat-row">
+          <span class="label">WAVE:</span>
+          <span id="ui-wave" class="value-highlight">WAVE 1</span>
+        </div>
+        <div class="stat-row">
+          <span class="label">BIOME:</span>
+          <span id="ui-biome" class="value" style="color: #ffb700;">AI BUNKER</span>
+        </div>
+        <div class="stat-row">
+          <span class="label">WEAPON:</span>
+          <span id="ui-weapon" class="value" style="color: var(--accent-cyan);">BIO PLASMA</span>
+        </div>
+        <div class="stat-row">
+          <span class="label">HIVE HP:</span>
+          <span id="ui-hp" class="value-highlight">100%</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- TOWER DEFENSE BUILD BAR -->
+    <div id="build-bar">
+      <div class="build-slot" id="slot-1" data-type="WALL">
+        <span class="key">1</span> <span class="name">CHITIN WALL</span> <span class="cost">15🧪</span>
+      </div>
+      <div class="build-slot" id="slot-2" data-type="TURRET">
+        <span class="key">2</span> <span class="name">SPORE TURRET</span> <span class="cost">35🧪</span>
+      </div>
+      <div class="build-slot" id="slot-3" data-type="TRAP">
+        <span class="key">3</span> <span class="name">ACID TRAP</span> <span class="cost">20🧪</span>
+      </div>
+      <div class="build-slot" id="slot-4" data-type="NODE">
+        <span class="key">4</span> <span class="name">HIVE NODE</span> <span class="cost">60🧪</span>
+      </div>
     </div>
   </div>
 
-  <script src="js/game.js"></script>
+  <!-- Canvas Wrapper -->
+  <div id="canvas-wrapper">
+    <canvas id="game-canvas"></canvas>
+
+    <!-- TITLE OVERLAY -->
+    <div id="screen-title" class="overlay-screen">
+      <h1 class="game-logo">ALIEN INVADER<br><span style="color:#33ff66; font-size: 18px;">POWER MEANS RESPONSIBILITY</span></h1>
+      <p class="subtitle">"CONQUER AI PLANET • BUILD DEFENSES • SURVIVE COUNTER-OFFENSIVES"</p>
+      
+      <button id="btn-start" class="btn">INVADE PLANET [SPACE]</button>
+
+      <div class="controls-hint">
+        [WASD / ARROWS] Move &nbsp;|&nbsp; [MOUSE] Aim & Shoot &nbsp;|&nbsp; [SPACE] Dash Roll<br>
+        [1-4] Select Structure &nbsp;|&nbsp; [CLICK] Place in Claimed Territory &nbsp;|&nbsp; [RIGHT CLICK / ESC] Cancel Build<br>
+        <span style="color:var(--accent-yellow);">CONQUER SECTORS WITH HIVE NODES TO GAIN POWER & UNLOCK BIOMES!</span>
+      </div>
+    </div>
+
+    <!-- PAUSE OVERLAY -->
+    <div id="screen-pause" class="overlay-screen hidden">
+      <h1 class="game-logo">INVASION PAUSED</h1>
+      <button id="btn-resume" class="btn">RESUME INVASION</button>
+    </div>
+
+    <!-- GAMEOVER OVERLAY -->
+    <div id="screen-gameover" class="overlay-screen hidden">
+      <h1 class="game-logo" style="color: var(--accent-neon);">HIVE DESTROYED</h1>
+      <p class="subtitle">"AI PLANETARY DEFENSE OVERWHELMED YOUR INVADER HIVE"</p>
+      
+      <div style="font-size: 14px; display: flex; flex-direction: column; gap: 8px; margin: 10px 0;">
+        <div>FINAL SCORE: <span id="final-score" style="color:var(--accent-yellow);">0</span></div>
+        <div>AIRDROPS CAPTURED: <span id="final-crates" style="color:var(--accent-cyan);">0</span></div>
+      </div>
+
+      <button id="btn-restart" class="btn">RE-INVADE [SPACE]</button>
+    </div>
+  </div>
+</div>
+
+<script src="./js/game.js"></script>
 
 
 
